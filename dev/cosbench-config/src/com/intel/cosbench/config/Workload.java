@@ -41,6 +41,7 @@ public class Workload {
     private String config = "";
     private Auth auth = DEFAULT_AUTH;
     private Storage storage = DEFAULT_STORAGE;
+    private Storage deststorage = DEFAULT_STORAGE;
     private Workflow workflow;
 
     public Workload() {

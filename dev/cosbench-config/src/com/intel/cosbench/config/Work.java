@@ -49,7 +49,9 @@ public class Work implements Iterable<Operation> {
     private String config = "";
     private Auth auth;
     private Storage storage;    
-    private List<Operation> operations;
+    private Sync sync;  
+
+	private List<Operation> operations;
 
     public Work() {
         /* empty */
@@ -209,6 +211,14 @@ public class Work implements Iterable<Operation> {
         this.storage = storage;
     }
     
+    public Sync getSync() {
+		return sync;
+	}
+
+	public void setSync(Sync sync) {
+		this.sync = sync;
+	}
+	
     public int getAfr() {
         return afr;
     }
@@ -343,6 +353,23 @@ public class Work implements Iterable<Operation> {
 		setOperations(Collections.singletonList(op));
 	} 
 	
+	public void toSyncWork() {
+		if (name == null)
+			name = "sync";
+		setDivision("object");
+		setRuntime(0);
+		setDefaultAfr(0);
+		setTotalBytes(0);
+		setWorkers(1);
+		setTotalOps(getWorkers());
+		Operation op = new Operation();
+		op.setType("sync");
+		op.setRatio(100);
+		Object[] cfgs = new Object[] { config };
+        op.setConfig(StringUtils.join(cfgs, ';'));
+        setOperations(Collections.singletonList(op));
+	} 
+	
 	private void setDefaultAfr(int def) {
 		if (afr < 0)
 			setAfr(def);
@@ -359,17 +386,24 @@ public class Work implements Iterable<Operation> {
             toDisposeWork();
 		else if (type.equals("delay"))
 			toDelayWork(); 
+		else if (type.equals("sync"))
+			toSyncWork(); 
 		else 
 			setDefaultAfr(200000);
         setName(getName());
         setWorkers(getWorkers());
-        if (runtime == 0 && totalOps == 0 && totalBytes == 0)
-            throw new ConfigException(
-                    "no work limits detectd, either runtime, total ops or total bytes");
+        if (!type.equals("sync")) {
+          if (runtime == 0 && totalOps == 0 && totalBytes == 0)
+              throw new ConfigException(
+                      "no work limits detectd, either runtime, total ops or total bytes");
+        }
         setAuth(getAuth());
         auth.validate();
         setStorage(getStorage());
         storage.validate();
+        if (type.equals("sync")) {
+          setSync(getSync());
+        }
         List<Operation> tempOpList = new ArrayList<Operation>();
         for (Operation op: operations) {
         	if(op.getRatio() > 0) {

@@ -65,7 +65,11 @@
 		<field name="storage" type="com.intel.cosbench.config.Storage">
 			<bind-xml name="storage" node="element" />
 		</field>
-
+		
+		<field name="sync" type="com.intel.cosbench.config.Sync">
+			<bind-xml name="sync" node="element" />
+		</field>
+		
 		<field name="operations" collection="arraylist"
 			type="com.intel.cosbench.config.Operation">
 			<bind-xml name="operation" node="element" />
