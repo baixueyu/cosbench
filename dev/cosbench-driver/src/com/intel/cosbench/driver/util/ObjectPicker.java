@@ -38,6 +38,8 @@ public class ObjectPicker {
 
     private NameGenerator conNmGen;
     private NameGenerator objNmGen;
+    private String srcBucket;
+    private String descBucket;
 
     public ObjectPicker() {
         /* empty */

@@ -40,8 +40,11 @@ public class WorkerContext implements WorkerInfo {
     private Mission mission;
     private transient Logger logger;
     private ErrorStatistics errorStatistics;
-    private transient AuthAPI authApi;
+
+
+	private transient AuthAPI authApi;
     private transient StorageAPI storageApi;
+    private transient StorageAPI dscStorageApi;
 
     private volatile boolean error = false;
     private volatile boolean aborted = false;
@@ -102,7 +105,14 @@ public class WorkerContext implements WorkerInfo {
     public void setStorageApi(StorageAPI storageApi) {
         this.storageApi = storageApi;
     }
+    
+    public StorageAPI getDscStorageApi() {
+		return dscStorageApi;
+	}
 
+	public void setDscStorageApi(StorageAPI dscStorageApi) {
+		this.dscStorageApi = dscStorageApi;
+	}
     public boolean isError() {
         return error;
     }

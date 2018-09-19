@@ -48,6 +48,8 @@ public class Operators {
             return new Disposer();
         if (StringUtils.equals(type, Deleter.OP_TYPE))
             return new Deleter();
+        if (StringUtils.equals(type, Syncer.OP_TYPE))
+        	return new Syncer();
         String msg = "unrecognized operation: " + type;
         throw new ConfigException(msg);
     }
