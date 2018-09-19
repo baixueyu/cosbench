@@ -48,6 +48,12 @@ public class Syncer extends AbstractOperator {
 
     @Override
     protected void operate(int idx, int all, Session session) {
+    	String srcBucketName = "aaa";
+    	String destBucketName = "bbb";
+    	String objectName = "obj";
+    	long objSize = 5;
+    	Sample sample1 = doSync(srcBucketName, destBucketName, objectName, objSize, config, session, this);
+    	
         Random random = session.getRandom();
         long size = sizePicker.pickObjSize(random);
         long len = chunked ? -1 : size;
@@ -61,6 +67,52 @@ public class Syncer extends AbstractOperator {
 		Result result = new Result(now, getId(), getOpType(), getSampleType(),
 				getName(), sample.isSucc());
         session.getListener().onOperationCompleted(result);
+    }
+    
+    public static  Sample doSync(String srcBucketName, String destBucketName, String objectName, long objSize, Config config, Session session, Operator op) {
+        if (Thread.interrupted())
+            throw new AbortedException();
+        //TODO Get object begin 
+        InputStream in = null;
+        try {
+        	in = session.getApi().getObject(srcBucketName, objectName, config);
+        } catch (StorageInterruptedException sie) {
+            doLogErr(session.getLogger(), sie.getMessage(), sie);
+            throw new AbortedException();
+        } catch (Exception e) {
+        	isUnauthorizedException(e, session);
+        	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);
+        	
+			return new Sample(new Date(), op.getId(), op.getOpType(),
+					op.getSampleType(), op.getName(), false);
+			
+        } finally {
+            IOUtils.closeQuietly(in);
+        } 
+        //TODO Get object end
+        //TODO send object begin
+        try {
+        	 session.getApi().createObject(destBucketName, objectName, in, objSize, config);
+        } catch (StorageInterruptedException sie) {
+            doLogErr(session.getLogger(), sie.getMessage(), sie);
+            throw new AbortedException();
+        } catch (Exception e) {
+        	isUnauthorizedException(e, session);
+        	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);
+        	
+			return new Sample(new Date(), op.getId(), op.getOpType(),
+					op.getSampleType(), op.getName(), false);
+			
+        } finally {
+            IOUtils.closeQuietly(in);
+        }
+        //TODO send object end
+        
+        long end = System.nanoTime();
+		return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(),
+				op.getName(), false); 
+				//true, (end - start) / 1000000,
+				//cin.getXferTime(), cin.getByteCount());
     }
     
     public static  Sample doWrite(InputStream in, long length, String conName,

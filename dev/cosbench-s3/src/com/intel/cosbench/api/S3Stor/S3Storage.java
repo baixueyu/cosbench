@@ -169,7 +169,7 @@ public class S3Storage extends NoneStorage {
         }
     }
     
-    public ObjectListing listObject(String bucketName, String marker){
+    public ObjectListing listObjects(String bucketName, String marker){
     	try {
     		ListObjectsRequest req = new ListObjectsRequest(bucketName, null, marker, null, 2); 
     		return client.listObjects(req);
