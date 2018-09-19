@@ -50,6 +50,9 @@ public class Mission implements Iterable<Operation> {
     private Auth auth = DEFAULT_AUTH;
     private Storage storage = DEFAULT_STORAGE;
     private List<Operation> operations;
+    private String srcBucketName;
+    private String destBucketName;
+    private List<String> objs;
     
     
 
@@ -225,9 +228,33 @@ public class Mission implements Iterable<Operation> {
         	op.setConfig(ConfigUtils.inherit(op.getConfig(), this.config));
         }
         this.operations = operations;
-    }
+    }    
 
-    @Override
+    public String getSrcBucketName() {
+		return srcBucketName;
+	}
+
+	public void setSrcBucketName(String srcBucketName) {
+		this.srcBucketName = srcBucketName;
+	}
+
+	public String getDestBucketName() {
+		return destBucketName;
+	}
+
+	public void setDestBucketName(String destBucketName) {
+		this.destBucketName = destBucketName;
+	}
+
+	public List<String> getObjs() {
+		return objs;
+	}
+
+	public void setObjs(List<String> objs) {
+		this.objs = objs;
+	}
+
+	@Override
     public Iterator<Operation> iterator() {
         return operations.iterator();
     }
