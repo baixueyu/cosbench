@@ -24,8 +24,12 @@ public class Syncer extends AbstractOperator {
     private boolean chunked;
     private boolean isRandom;
     private boolean hashCheck = false;
-    private ObjectPicker objPicker = new ObjectPicker();
-    private SizePicker sizePicker = new SizePicker();
+    //private ObjectPicker objPicker = new ObjectPicker();
+    //private SizePicker sizePicker = new SizePicker();
+    String srcBucketName;
+	String destBucketName;
+	String objectName;
+	long objSize;
 
     public Syncer() {
         /* empty */
@@ -34,8 +38,8 @@ public class Syncer extends AbstractOperator {
     @Override
     protected void init(String id, int ratio, String division, Config config) {
         super.init(id, ratio, division, config);
-        objPicker.init(division, config);
-        sizePicker.init(config);
+        //objPicker.init(division, config);
+        //sizePicker.init(config);
         chunked = config.getBoolean("chunked", false);
         isRandom = !config.get("content", "random").equals("zero");
         hashCheck = config.getBoolean("hashCheck", false);
@@ -45,8 +49,41 @@ public class Syncer extends AbstractOperator {
     public String getOpType() {
         return OP_TYPE;
     }
+    
 
-    @Override
+    public String getSrcBucketName() {
+		return srcBucketName;
+	}
+
+	public void setSrcBucketName(String srcBucketName) {
+		this.srcBucketName = srcBucketName;
+	}
+
+	public String getDestBucketName() {
+		return destBucketName;
+	}
+
+	public void setDestBucketName(String destBucketName) {
+		this.destBucketName = destBucketName;
+	}
+
+	public String getObjectName() {
+		return objectName;
+	}
+
+	public void setObjectName(String objectName) {
+		this.objectName = objectName;
+	}
+
+	public long getObjSize() {
+		return objSize;
+	}
+
+	public void setObjSize(long objSize) {
+		this.objSize = objSize;
+	}
+
+	@Override
     protected void operate(int idx, int all, Session session) {
     	String srcBucketName = "aaa";
     	String destBucketName = "bbb";
@@ -54,7 +91,7 @@ public class Syncer extends AbstractOperator {
     	long objSize = 5;
     	Sample sample1 = doSync(srcBucketName, destBucketName, objectName, objSize, config, session, this);
     	
-        Random random = session.getRandom();
+        /*Random random = session.getRandom();
         long size = sizePicker.pickObjSize(random);
         long len = chunked ? -1 : size;
         String[] path = objPicker.pickObjPath(random, idx, all);
@@ -66,7 +103,7 @@ public class Syncer extends AbstractOperator {
         Date now = sample.getTimestamp();
 		Result result = new Result(now, getId(), getOpType(), getSampleType(),
 				getName(), sample.isSucc());
-        session.getListener().onOperationCompleted(result);
+        session.getListener().onOperationCompleted(result);*/
     }
     
     public static  Sample doSync(String srcBucketName, String destBucketName, String objectName, long objSize, Config config, Session session, Operator op) {

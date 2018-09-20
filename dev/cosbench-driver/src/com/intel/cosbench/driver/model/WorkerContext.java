@@ -44,7 +44,7 @@ public class WorkerContext implements WorkerInfo {
 
 	private transient AuthAPI authApi;
     private transient StorageAPI storageApi;
-    private transient StorageAPI dscStorageApi;
+    private transient StorageAPI destStorageApi;
 
     private volatile boolean error = false;
     private volatile boolean aborted = false;
@@ -106,12 +106,12 @@ public class WorkerContext implements WorkerInfo {
         this.storageApi = storageApi;
     }
     
-    public StorageAPI getDscStorageApi() {
-		return dscStorageApi;
+    public StorageAPI getDestStorageApi() {
+		return destStorageApi;
 	}
 
-	public void setDscStorageApi(StorageAPI dscStorageApi) {
-		this.dscStorageApi = dscStorageApi;
+	public void setDestStorageApi(StorageAPI dscStorageApi) {
+		this.destStorageApi = dscStorageApi;
 	}
     public boolean isError() {
         return error;

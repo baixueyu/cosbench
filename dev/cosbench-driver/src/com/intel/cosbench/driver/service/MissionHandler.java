@@ -23,6 +23,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+//import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 
 import com.intel.cosbench.api.auth.*;
@@ -49,6 +50,8 @@ class MissionHandler {
     private static final Logger LOGGER = LogFactory.getSystemLogger();
 
     private static final File LOG_DIR = new File(new File("log"), "mission");
+    
+    private String type;
 
     static {
         if (!LOG_DIR.exists())
@@ -84,8 +87,16 @@ class MissionHandler {
     public void setStorageAPIs(StorageAPIService storageAPIs) {
         this.storageAPIs = storageAPIs;
     }
+    
+    public String getType() {
+		return type;
+	}
 
-    public void dispose() {
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public void dispose() {
         if (executor != null)
             executor.shutdown();
         executor = null;
@@ -126,8 +137,12 @@ class MissionHandler {
         OperatorRegistry registry = new OperatorRegistry();
         Mission mission = missionContext.getMission();
         initOpDefaultName(mission);
-        for (Operation op : mission)
+        for (Operation op : mission) {
+        	if (op.getType().equals("sync")) {
+        		setType("sync");
+        	}
             registry.addOperator(createOperatorContext(op));
+        }
         missionContext.setOperatorRegistry(registry);
     }
 
@@ -181,8 +196,44 @@ class MissionHandler {
         Mission mission = missionContext.getMission();
         int workers = mission.getWorkers();
         int offset = mission.getOffset();
-        for (int idx = 1; idx <= workers; idx++)
-            registry.addWorker(createWorkerContext(idx + offset, mission));
+        if (getType().equals("sync")) {
+        	//TODO for sync operator set object_list to registry, divide equally
+        	//List<String> objs = mission.getObjs();
+        	//just for test begin
+        	List<String> objs = new LinkedList<String>();
+        	objs.add("obj1");
+        	objs.add("obj2");
+        	objs.add("obj3");
+        	objs.add("obj4"); 	
+        	//just for test end
+        	int objSize = objs.size();
+        	List<String> sync_objs = null;
+        	int listSize = 0;
+        	if ((objSize % workers) != 0) {
+        		listSize = objSize / workers + 1; 
+        	} else {
+        		listSize = objSize / workers;
+        	}        	
+        	int start = 1;
+        	int end = 1;
+         	for (int idx = 1; idx <= workers; idx++) {
+         		//Get subList start & end pos
+         		start = start * listSize * (idx - 1);
+         		end = end * listSize * idx - 1;
+         		end = ((end + 1) >= objSize ? objSize : end); 
+        		// Get sync subList
+         		sync_objs = objs.subList(start, end);
+         		mission.setObjs(sync_objs);
+         		//TODO set srcBucketName & destBucketName
+         		//mission.setSrcBucketName(srcBucketName);
+         		//mission.setDestBucketName(destBucketName);
+         		registry.addWorker(createWorkerContext(idx + offset, mission));        		
+        	}
+        } else {
+            for (int idx = 1; idx <= workers; idx++) {
+            	registry.addWorker(createWorkerContext(idx + offset, mission));
+            }
+        }        
         missionContext.setWorkerRegistry(registry);
     }
 
@@ -194,11 +245,16 @@ class MissionHandler {
         context.setLogger(manager.getLogger());
         context.setErrorStatistics(missionContext.getErrorStatistics());
         context.setAuthApi(createAuthApi(mission.getAuth(), manager));
-        context.setStorageApi(createStorageApi(mission.getStorage(), manager));
+        if(getType().equals("sync")) {        	
+        	context.setStorageApi(createSyncStorageApi(mission.getStorage(), manager, "src"));
+        	context.setDestStorageApi(createSyncStorageApi(mission.getStorage(), manager, "dest"));
+        } else {
+        	context.setStorageApi(createStorageApi(mission.getStorage(), manager));
+        }
         return context;
     }
 
-    private AuthAPI createAuthApi(Auth auth, LogManager manager) {
+	private AuthAPI createAuthApi(Auth auth, LogManager manager) {
         String type = auth.getType();
         Logger logger = manager.getLogger();
         return authAPIs.getAuth(type, authConfig, logger);
@@ -208,6 +264,34 @@ class MissionHandler {
         String type = storage.getType();
         Logger logger = manager.getLogger();
         return storageAPIs.getStorage(type, storageConfig, logger);
+    }
+    
+    private StorageAPI createSyncStorageApi(Storage storage, LogManager manager, String storageType) {
+    	Config syncStorageConfig = null;
+    	String accesskey;
+    	String secretkey;
+    	String endpoint;
+    	String entry;
+    	String type = storage.getType();
+        Logger logger = manager.getLogger();
+    	if (storageType.equals("src")) {
+    		accesskey = storageConfig.get("srcAccessKey");
+    		entry = "accesskey=" + accesskey + ";";
+    		secretkey = storageConfig.get("srcSecretKey");
+    		entry = entry + "secretkey=" + secretkey + ";";
+    		endpoint = storageConfig.get("syncFrom");
+    		entry = entry + "endpoint=" + endpoint + ";";
+    		syncStorageConfig = KVConfigParser.parse(entry);
+    	} else if (storageType.equals("dest")) {
+    		accesskey = storageConfig.get("destAccessKey");
+    		entry = "accesskey=" + accesskey + ";";
+    		secretkey = storageConfig.get("destSecretKey");
+    		entry = entry + "secretkey=" + secretkey + ";";
+    		endpoint = storageConfig.get("destTo");
+    		entry = entry + "endpoint=" + endpoint + ";";
+    		syncStorageConfig = KVConfigParser.parse(entry);
+    	}
+        return storageAPIs.getStorage(type, syncStorageConfig, logger);
     }
 
     private void createExecutor() {
