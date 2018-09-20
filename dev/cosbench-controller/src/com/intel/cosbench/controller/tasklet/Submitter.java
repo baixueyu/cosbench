@@ -19,10 +19,24 @@ package com.intel.cosbench.controller.tasklet;
 
 import static com.intel.cosbench.model.TaskState.SUBMITTED;
 
-import com.intel.cosbench.config.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import com.intel.cosbench.config.Config;
+import com.intel.cosbench.config.Mission;
+import com.intel.cosbench.config.MissionWriter;
+import com.intel.cosbench.config.Work;
 import com.intel.cosbench.config.castor.CastorConfigTools;
-import com.intel.cosbench.controller.model.*;
+import com.intel.cosbench.config.common.KVConfigParser;
+import com.intel.cosbench.controller.model.SchedulePlan;
+import com.intel.cosbench.controller.model.TaskContext;
 import com.intel.cosbench.protocol.SubmitResponse;
+import com.intel.cosbench.api.storage.StorageAPI;
+import com.intel.cosbench.api.storage.StorageAPIFactory;
+import com.intel.cosbench.api.S3Stor.S3Storage;
+import com.intel.cosbench.api.S3Stor.S3StorageFactory;
+
 
 /**
  * The class encapsulates how to handle boot request/response, internally, it
@@ -68,6 +82,10 @@ class Submitter extends AbstractCommandTasklet<SubmitResponse> {
         	mission.setStorage(work.getStorage());
         }
         mission.setOperations(work.getOperations());
+        if (work.getType().equals("sync")) {
+        	String config = work.getConfig();       
+            setSyncInfo(config, mission, work);
+        }
         LOGGER.debug("controller work config is:" +work.getConfig());
         LOGGER.debug("controller mission config is: "+ mission.getConfig());
         return mission;
@@ -77,6 +95,62 @@ class Submitter extends AbstractCommandTasklet<SubmitResponse> {
     protected void handleResponse(SubmitResponse response) {
         String id = response.getId();
         context.setMissionId(id);
+    }
+    
+    private void setSyncInfo(String config, Mission mission, Work work){
+    	/*
+    	String[] arrayConfig = config.split(";");
+    	if (config.contains("bucket")) {
+
+    		for (String s : arrayConfig) {
+    			if (s.contains("srcBucket")) {
+    				mission.setSrcBucketName(s.substring(s.indexOf("=") + 1).trim());
+    			}
+    			if (s.contains("destBucket")) {
+    				mission.setDestBucketName(s.substring(s.indexOf("=") + 1).trim());
+    			}
+    		}
+    		
+    		String storageConfig = work.getStorage().getConfig();
+            String[] arrayStorageConfig = storageConfig.split(";");
+    		String srcAccessKey;
+    		String srcSecretKey;
+    		String syncFrom;
+            for (String s : arrayStorageConfig) {
+            	if (s.contains("srcAccessKey")) {
+            		srcAccessKey = s.substring(s.indexOf("=") + 1).trim();
+    			}
+            	if (s.contains("srcSecretKey")) {
+            		srcSecretKey = s.substring(s.indexOf("=") + 1).trim();
+    			}
+            	if (s.contains("syncFrom")) {
+            		syncFrom = s.substring(s.indexOf("=") + 1).trim();
+    			}
+    		}
+            
+           
+    	}
+    	*/
+    	 Config con = KVConfigParser.parse(config);
+    	 String srcBucket = con.get("srcBucket");
+    	 String destBucket = con.get("destBucket");
+    	 mission.setSrcBucketName(srcBucket);
+    	 mission.setDestBucketName(destBucket);
+    	 String workConfig =  work.getStorage().getConfig();
+    	 Config workCon =  KVConfigParser.parse(workConfig);
+    	 S3Storage s3Storage = new S3Storage();
+    	 s3Storage.init(workCon, LOGGER);
+    	 Map<String,Long> m = s3Storage.listObjects(srcBucket, "");
+    	 for (Entry<String, Long> entry : m.entrySet()) {
+    		 System.out.println(entry.getKey() + "-------" + entry.getValue()); 
+    		  //entry.getKey() ;
+    		  //entry.getValue(); 
+    		}
+    	 
+    	
+    	
+    	 
+         
     }
 
 }

@@ -17,7 +17,9 @@ limitations under the License.
 
 package com.intel.cosbench.config;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -52,7 +54,7 @@ public class Mission implements Iterable<Operation> {
     private List<Operation> operations;
     private String srcBucketName;
     private String destBucketName;
-    private List<String> objs;
+    private Map<String,Long> objs;
     
     
 
@@ -246,11 +248,13 @@ public class Mission implements Iterable<Operation> {
 		this.destBucketName = destBucketName;
 	}
 
-	public List<String> getObjs() {
+	
+
+	public Map<String, Long> getObjs() {
 		return objs;
 	}
 
-	public void setObjs(List<String> objs) {
+	public void setObjs(Map<String, Long> objs) {
 		this.objs = objs;
 	}
 

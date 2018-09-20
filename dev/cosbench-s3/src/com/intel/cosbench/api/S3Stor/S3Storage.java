@@ -1,19 +1,41 @@
 package com.intel.cosbench.api.S3Stor;
 
-import static com.intel.cosbench.client.S3Stor.S3Constants.*;
+import static com.intel.cosbench.client.S3Stor.S3Constants.AUTH_PASSWORD_DEFAULT;
+import static com.intel.cosbench.client.S3Stor.S3Constants.AUTH_PASSWORD_KEY;
+import static com.intel.cosbench.client.S3Stor.S3Constants.AUTH_USERNAME_DEFAULT;
+import static com.intel.cosbench.client.S3Stor.S3Constants.AUTH_USERNAME_KEY;
+import static com.intel.cosbench.client.S3Stor.S3Constants.CONN_TIMEOUT_DEFAULT;
+import static com.intel.cosbench.client.S3Stor.S3Constants.CONN_TIMEOUT_KEY;
+import static com.intel.cosbench.client.S3Stor.S3Constants.ENDPOINT_DEFAULT;
+import static com.intel.cosbench.client.S3Stor.S3Constants.ENDPOINT_KEY;
+import static com.intel.cosbench.client.S3Stor.S3Constants.PATH_STYLE_ACCESS_DEFAULT;
+import static com.intel.cosbench.client.S3Stor.S3Constants.PATH_STYLE_ACCESS_KEY;
+import static com.intel.cosbench.client.S3Stor.S3Constants.PROXY_HOST_KEY;
+import static com.intel.cosbench.client.S3Stor.S3Constants.PROXY_PORT_KEY;
 
-import java.io.*;
+import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.HttpStatus;
 
-import com.amazonaws.*;
-import com.amazonaws.auth.*;
-import com.amazonaws.services.s3.*;
-import com.amazonaws.services.s3.model.*;
-
-import com.intel.cosbench.api.storage.*;
-import com.intel.cosbench.api.context.*;
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.S3ClientOptions;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.intel.cosbench.api.context.AuthContext;
+import com.intel.cosbench.api.storage.NoneStorage;
+import com.intel.cosbench.api.storage.StorageException;
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.Logger;
 
@@ -161,19 +183,31 @@ public class S3Storage extends NoneStorage {
         }
     }
     
-    public List<Bucket> listBuckets(){   
+    public List<String> listBuckets(){   
     	try {
-    	    return client.listBuckets();
+    		List<String> buckets = null;
+    		List<Bucket> listBucket = client.listBuckets();
+    		for (Bucket bucket : listBucket) {
+    			buckets.add(bucket.getName());
+			}
+    		return buckets;
         } catch (Exception e) {
             throw new StorageException(e);
         }
     }
     
-    public ObjectListing listObjects(String bucketName, String marker){
+    public HashMap<String, Long> listObjects(String bucketName, String marker){
     	try {
-    		ListObjectsRequest req = new ListObjectsRequest(bucketName, null, marker, null, 2); 
-    		return client.listObjects(req);
+    		 HashMap<String,Long> objs = null ;
+    		 ListObjectsRequest req = new ListObjectsRequest(bucketName, null, marker, null, 2);
+    		 ObjectListing ol = client.listObjects(req);
+    		 List<S3ObjectSummary>  objects = ol.getObjectSummaries();
+    		 for (S3ObjectSummary os : objects) {
+    			objs.put(os.getKey(), os.getSize());
+				//os.getKey();
+			}
    		 	//client.listObjects(bucketName);
+    		 return objs;
         } catch (Exception e) {
             throw new StorageException(e);
         }

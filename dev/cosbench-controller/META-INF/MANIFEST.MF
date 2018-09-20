@@ -9,6 +9,7 @@ Import-Package: com.intel.cosbench.bench,
  com.intel.cosbench.client.http,
  com.intel.cosbench.config,
  com.intel.cosbench.config.castor,
+ com.intel.cosbench.config.common,
  com.intel.cosbench.exporter,
  com.intel.cosbench.log,
  com.intel.cosbench.model,
@@ -25,3 +26,5 @@ Import-Package: com.intel.cosbench.bench,
  org.apache.http.util;version="[4.1.0,5.0.0)",
  org.codehaus.jackson;version="[1.4.2,2.0.0)",
  org.codehaus.jackson.map;version="[1.4.2,2.0.0)"
+Require-Bundle: cosbench-api;bundle-version="0.4.1",
+ cosbench-s3;bundle-version="0.4.1"
