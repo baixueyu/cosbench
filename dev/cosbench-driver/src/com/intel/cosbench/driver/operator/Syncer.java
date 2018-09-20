@@ -88,7 +88,7 @@ public class Syncer extends AbstractOperator {
     	String srcBucketName = "aaa";
     	String destBucketName = "bbb";
     	String objectName = "obj";
-    	long objSize = 5;
+    	long objSize = 36700160;
     	Sample sample1 = doSync(srcBucketName, destBucketName, objectName, objSize, config, session, this);
     	
         /*Random random = session.getRandom();
@@ -123,8 +123,6 @@ public class Syncer extends AbstractOperator {
 			return new Sample(new Date(), op.getId(), op.getOpType(),
 					op.getSampleType(), op.getName(), false);
 			
-        } finally {
-            IOUtils.closeQuietly(in);
         } 
         //TODO Get object end
         //TODO send object begin

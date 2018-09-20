@@ -172,7 +172,7 @@ class WorkAgent extends AbstractAgent implements Session, OperationListener {
 
     private void doWork() {
         doSnapshot();
-        while (!workerContext.isFinished())
+        while (!workerContext.isFinished()) {
             try {
                 performOperation();
 			}catch (AbortedException ae) {
@@ -183,6 +183,7 @@ class WorkAgent extends AbstractAgent implements Session, OperationListener {
         	if ("sync".equals("sync1")) {
         		workerContext.setFinished(true);
         	}
+        }
         doSnapshot();
     }
         
