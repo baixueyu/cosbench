@@ -88,7 +88,7 @@ public class Syncer extends AbstractOperator {
     	String srcBucketName = "aaa";
     	String destBucketName = "bbb";
     	String objectName = "obj";
-    	long objSize = 7340032;
+    	long objSize = 1073741824;
     	Sample sample1 = doSync(srcBucketName, destBucketName, objectName, objSize, config, session, this);
     	
         /*Random random = session.getRandom();

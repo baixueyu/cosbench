@@ -50,6 +50,8 @@ class AuthAgent extends AbstractAgent {
              */
             StorageAPI storageApi = workerContext.getStorageApi();
             storageApi.setAuthContext(login());
+            StorageAPI destStorageApi = workerContext.getDestStorageApi();
+            destStorageApi.setAuthContext(login());
 
         } catch (AuthInterruptedException ie) {
             throw new AbortedException();

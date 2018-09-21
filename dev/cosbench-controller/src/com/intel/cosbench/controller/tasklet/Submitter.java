@@ -19,9 +19,10 @@ package com.intel.cosbench.controller.tasklet;
 
 import static com.intel.cosbench.model.TaskState.SUBMITTED;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
-import com.intel.cosbench.api.S3Stor.S3Storage;
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.config.Mission;
 import com.intel.cosbench.config.MissionWriter;
@@ -31,6 +32,8 @@ import com.intel.cosbench.config.common.KVConfigParser;
 import com.intel.cosbench.controller.model.SchedulePlan;
 import com.intel.cosbench.controller.model.TaskContext;
 import com.intel.cosbench.protocol.SubmitResponse;
+//import com.intel.cosbench.api.S3Stor.S3Storage;
+//import com.intel.cosbench.api.S3Stor.S3StorageFactory;
 
 
 /**
@@ -74,7 +77,7 @@ class Submitter extends AbstractCommandTasklet<SubmitResponse> {
         if (work.getType().equals("sync")) {
         	mission.setStorage(work.getSync().getSyncStorage());
         	String config = work.getConfig();       
-            setSyncInfo(config, mission, work);
+            //setSyncInfo(config, mission, work);
         } else {
         	mission.setStorage(work.getStorage());
         }
@@ -90,7 +93,7 @@ class Submitter extends AbstractCommandTasklet<SubmitResponse> {
         context.setMissionId(id);
     }
     
-    private void setSyncInfo(String config, Mission mission, Work work){
+   /* private void setSyncInfo(String config, Mission mission, Work work){
    
     	 Config con = KVConfigParser.parse(config);
     	 String srcBucket = con.get("srcBucket");
@@ -122,6 +125,6 @@ class Submitter extends AbstractCommandTasklet<SubmitResponse> {
     	
     	 
          
-    }
+   /* }*/
 
 }
