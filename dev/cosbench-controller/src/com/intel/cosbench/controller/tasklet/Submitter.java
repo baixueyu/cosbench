@@ -116,7 +116,7 @@ class Submitter extends AbstractCommandTasklet<SubmitResponse> {
     		 System.out.println(e.getKey() + "-------" + e.getValue()); 
     		}
     	 */
-    	 mission.setObjs(m);
+    	// mission.setObjs(m);
     	
     	
     	

@@ -180,7 +180,7 @@ class WorkAgent extends AbstractAgent implements Session, OperationListener {
                     doSummary();
                 workerContext.setFinished(true);
             }
-        	if ("sync".equals("sync1")) {
+        	if ("sync".equals("sync")) {
         		workerContext.setFinished(true);
         	}
         }

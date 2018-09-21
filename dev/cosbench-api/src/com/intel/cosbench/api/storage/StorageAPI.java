@@ -167,5 +167,16 @@ public interface StorageAPI {
      * 
      */
     public Boolean isAuthValid();
+    
+    /**
+     * Sync object
+     * @param destBucketName
+     * @param objectName
+     * @param in
+     * @param objSize
+     * @param config
+     */
+	public void syncObject(String destBucketName, String objectName,
+			InputStream in, long objSize, Config config);
 
 }

@@ -13,6 +13,7 @@ import static com.intel.cosbench.client.S3Stor.S3Constants.PATH_STYLE_ACCESS_KEY
 import static com.intel.cosbench.client.S3Stor.S3Constants.PROXY_HOST_KEY;
 import static com.intel.cosbench.client.S3Stor.S3Constants.PROXY_PORT_KEY;
 
+
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,10 +31,12 @@ import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.internal.SkipMd5CheckStrategy;
 import com.intel.cosbench.api.context.AuthContext;
 import com.intel.cosbench.api.storage.NoneStorage;
 import com.intel.cosbench.api.storage.StorageException;
@@ -74,7 +77,7 @@ public class S3Storage extends NoneStorage {
     	parms.put(PROXY_PORT_KEY, proxyPort);
 
         logger.debug("using storage config: {}", parms);
-        
+        //SkipMd5CheckStrategy.DISABLE_GET_OBJECT_MD5_VALIDATION_PROPERTY = false;
         ClientConfiguration clientConf = new ClientConfiguration();
         clientConf.setConnectionTimeout(timeout);
         clientConf.setSocketTimeout(timeout);
@@ -149,6 +152,37 @@ public class S3Storage extends NoneStorage {
     		metadata.setContentType("application/octet-stream");
     		
         	client.putObject(container, object, data, metadata);
+        } catch (Exception e) {
+            throw new StorageException(e);
+        }
+    }
+	
+	@Override
+    public void syncObject(String container, String object, InputStream data,
+            long length, Config config) {    	
+        //super.createObject(container, object, data, length, config);
+        try {
+    		ObjectMetadata metadata = new ObjectMetadata();
+    		metadata.setContentLength(length);
+    		metadata.setContentType("application/octet-stream");
+    		PutObjectRequest request =new PutObjectRequest(container, object, data, metadata);
+    		request.getRequestClientOptions().setReadLimit(15728640); //15MB
+        	client.putObject(request);       
+        } catch (Exception e) {
+            throw new StorageException(e);
+        }
+    }
+    
+    public void syncMultipartObject(String container, String object, InputStream data,
+            long length, Config config) {
+        try {
+        	//TODO for MultipartUpload
+    		ObjectMetadata metadata = new ObjectMetadata();
+    		metadata.setContentLength(length);
+    		metadata.setContentType("application/octet-stream");
+    		PutObjectRequest request =new PutObjectRequest(container, object, data, metadata);
+    		request.getRequestClientOptions().setReadLimit(15728640); //15MB
+        	client.putObject(request);
         } catch (Exception e) {
             throw new StorageException(e);
         }

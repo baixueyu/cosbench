@@ -88,7 +88,7 @@ public class Syncer extends AbstractOperator {
     	String srcBucketName = "aaa";
     	String destBucketName = "bbb";
     	String objectName = "obj";
-    	long objSize = 36700160;
+    	long objSize = 7340032;
     	Sample sample1 = doSync(srcBucketName, destBucketName, objectName, objSize, config, session, this);
     	
         /*Random random = session.getRandom();
@@ -127,7 +127,7 @@ public class Syncer extends AbstractOperator {
         //TODO Get object end
         //TODO send object begin
         try {
-        	 session.getApi().createObject(destBucketName, objectName, in, objSize, config);
+        	 session.getApi().syncObject(destBucketName, objectName, in, objSize, config);
         } catch (StorageInterruptedException sie) {
             doLogErr(session.getLogger(), sie.getMessage(), sie);
             throw new AbortedException();

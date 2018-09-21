@@ -131,6 +131,13 @@ public class NoneStorage implements StorageAPI {
         if (logging)
             logger.info("performing DELETE at /{}/{}", container, object);
     }
+    
+    @Override
+    public void syncObject(String container, String object, InputStream data,
+            long length, Config config) {
+    	 if (logging)
+             logger.info("performing Sync at /{}/{}", container, object);
+    }
 
     protected void createMetadata(String container, String object,
             Map<String, String> map, Config config) {
