@@ -196,7 +196,7 @@ class MissionHandler {
         Mission mission = missionContext.getMission();
         int workers = mission.getWorkers();
         int offset = mission.getOffset();
-        if (getType().equals("sync")) {
+        if (getType() != null &&  getType().equals("sync")) {
         	//TODO for sync operator set object_list to registry, divide equally
         	//List<String> objs = mission.getObjs();
         	//just for test begin
@@ -223,7 +223,7 @@ class MissionHandler {
          		end = ((end + 1) >= objSize ? objSize : end); 
         		// Get sync subList
          		sync_objs = objs.subList(start, end);
-         		mission.setObjs(sync_objs);
+         		//mission.setObjs(sync_objs);
          		//TODO set srcBucketName & destBucketName
          		//mission.setSrcBucketName(srcBucketName);
          		//mission.setDestBucketName(destBucketName);
@@ -245,7 +245,7 @@ class MissionHandler {
         context.setLogger(manager.getLogger());
         context.setErrorStatistics(missionContext.getErrorStatistics());
         context.setAuthApi(createAuthApi(mission.getAuth(), manager));
-        if(getType().equals("sync")) {        	
+        if(getType() != null && getType().equals("sync")) {        	
         	context.setStorageApi(createSyncStorageApi(mission.getStorage(), manager, "src"));
         	context.setDestStorageApi(createSyncStorageApi(mission.getStorage(), manager, "dest"));
         } else {
