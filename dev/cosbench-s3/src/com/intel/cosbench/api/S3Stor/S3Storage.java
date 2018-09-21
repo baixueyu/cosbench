@@ -14,6 +14,7 @@ import static com.intel.cosbench.client.S3Stor.S3Constants.PROXY_HOST_KEY;
 import static com.intel.cosbench.client.S3Stor.S3Constants.PROXY_PORT_KEY;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -185,7 +186,7 @@ public class S3Storage extends NoneStorage {
     
     public List<String> listBuckets(){   
     	try {
-    		List<String> buckets = null;
+    		List<String> buckets = new ArrayList<String>();
     		List<Bucket> listBucket = client.listBuckets();
     		for (Bucket bucket : listBucket) {
     			buckets.add(bucket.getName());
@@ -198,7 +199,7 @@ public class S3Storage extends NoneStorage {
     
     public HashMap<String, Long> listObjects(String bucketName, String marker){
     	try {
-    		 HashMap<String,Long> objs = null ;
+    		 HashMap<String,Long> objs = new  HashMap<String, Long>();
     		 ListObjectsRequest req = new ListObjectsRequest(bucketName, null, marker, null, 2);
     		 ObjectListing ol = client.listObjects(req);
     		 List<S3ObjectSummary>  objects = ol.getObjectSummaries();

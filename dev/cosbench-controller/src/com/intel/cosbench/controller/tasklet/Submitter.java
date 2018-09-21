@@ -78,14 +78,12 @@ class Submitter extends AbstractCommandTasklet<SubmitResponse> {
         mission.setAuth(work.getAuth());
         if (work.getType().equals("sync")) {
         	mission.setStorage(work.getSync().getSyncStorage());
+        	String config = work.getConfig();       
+            setSyncInfo(config, mission, work);
         } else {
         	mission.setStorage(work.getStorage());
         }
         mission.setOperations(work.getOperations());
-        if (work.getType().equals("sync")) {
-        	String config = work.getConfig();       
-            setSyncInfo(config, mission, work);
-        }
         LOGGER.debug("controller work config is:" +work.getConfig());
         LOGGER.debug("controller mission config is: "+ mission.getConfig());
         return mission;
@@ -98,55 +96,33 @@ class Submitter extends AbstractCommandTasklet<SubmitResponse> {
     }
     
     private void setSyncInfo(String config, Mission mission, Work work){
-    	/*
-    	String[] arrayConfig = config.split(";");
-    	if (config.contains("bucket")) {
-
-    		for (String s : arrayConfig) {
-    			if (s.contains("srcBucket")) {
-    				mission.setSrcBucketName(s.substring(s.indexOf("=") + 1).trim());
-    			}
-    			if (s.contains("destBucket")) {
-    				mission.setDestBucketName(s.substring(s.indexOf("=") + 1).trim());
-    			}
-    		}
-    		
-    		String storageConfig = work.getStorage().getConfig();
-            String[] arrayStorageConfig = storageConfig.split(";");
-    		String srcAccessKey;
-    		String srcSecretKey;
-    		String syncFrom;
-            for (String s : arrayStorageConfig) {
-            	if (s.contains("srcAccessKey")) {
-            		srcAccessKey = s.substring(s.indexOf("=") + 1).trim();
-    			}
-            	if (s.contains("srcSecretKey")) {
-            		srcSecretKey = s.substring(s.indexOf("=") + 1).trim();
-    			}
-            	if (s.contains("syncFrom")) {
-            		syncFrom = s.substring(s.indexOf("=") + 1).trim();
-    			}
-    		}
-            
-           
-    	}
-    	*/
+   
     	 Config con = KVConfigParser.parse(config);
     	 String srcBucket = con.get("srcBucket");
     	 String destBucket = con.get("destBucket");
     	 mission.setSrcBucketName(srcBucket);
     	 mission.setDestBucketName(destBucket);
-    	 String workConfig =  work.getStorage().getConfig();
+    	 String workConfig =  work.getSync().getSyncStorage().getConfig();
     	 Config workCon =  KVConfigParser.parse(workConfig);
-    	 S3Storage s3Storage = new S3Storage();
-    	 s3Storage.init(workCon, LOGGER);
-    	 Map<String,Long> m = s3Storage.listObjects(srcBucket, "");
-    	 for (Entry<String, Long> entry : m.entrySet()) {
-    		 System.out.println(entry.getKey() + "-------" + entry.getValue()); 
-    		  //entry.getKey() ;
-    		  //entry.getValue(); 
-    		}
     	 
+    	 String accesskey = workCon.get("srcAccessKey");
+ 		 String entry = "accesskey=" + accesskey + ";";
+ 		 String secretkey = workCon.get("srcSecretKey");
+ 		 entry = entry + "secretkey=" + secretkey + ";";
+ 		 String endpoint = workCon.get("syncFrom");
+ 		 entry = entry + "endpoint=" + endpoint + ";";
+ 		 Config syncStorageConfig = KVConfigParser.parse(entry);
+    	 
+    	 S3Storage s3Storage = new S3Storage();
+    	 s3Storage.init(syncStorageConfig, LOGGER);
+    	 Map<String,Long> m = s3Storage.listObjects(srcBucket, "");
+    	 /*
+    	 for (Entry<String, Long> e : m.entrySet()) {
+    		 System.out.println(e.getKey() + "-------" + e.getValue()); 
+    		}
+    	 */
+    	 mission.setObjs(m);
+    	
     	
     	
     	 
