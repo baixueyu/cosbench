@@ -19,10 +19,9 @@ package com.intel.cosbench.controller.tasklet;
 
 import static com.intel.cosbench.model.TaskState.SUBMITTED;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
+import com.intel.cosbench.api.S3Stor.S3Storage;
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.config.Mission;
 import com.intel.cosbench.config.MissionWriter;
@@ -32,10 +31,6 @@ import com.intel.cosbench.config.common.KVConfigParser;
 import com.intel.cosbench.controller.model.SchedulePlan;
 import com.intel.cosbench.controller.model.TaskContext;
 import com.intel.cosbench.protocol.SubmitResponse;
-import com.intel.cosbench.api.storage.StorageAPI;
-import com.intel.cosbench.api.storage.StorageAPIFactory;
-import com.intel.cosbench.api.S3Stor.S3Storage;
-import com.intel.cosbench.api.S3Stor.S3StorageFactory;
 
 
 /**

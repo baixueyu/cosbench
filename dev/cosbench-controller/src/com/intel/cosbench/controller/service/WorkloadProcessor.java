@@ -156,6 +156,13 @@ class WorkloadProcessor {
         executeTrigger(trigger, true, workloadContext.getId());
         while (iter.hasNext()) {
             StageContext stageContext = iter.next();
+            if (stageContext.getStage().getName().equals("sync")) {
+            	List<Work> works = stageContext.getStage().getWorks();
+            	for (Work work : works) {
+					work.getSync().getSyncStorage().getConfig();
+				}
+            }
+            
             iter.remove();
             runStage(stageContext);
         }
