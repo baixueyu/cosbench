@@ -17,18 +17,43 @@ limitations under the License.
 
 package com.intel.cosbench.controller.service;
 
-import static com.intel.cosbench.model.WorkloadState.*;
-import static java.util.concurrent.TimeUnit.*;
+import static com.intel.cosbench.model.WorkloadState.CANCELLED;
+import static com.intel.cosbench.model.WorkloadState.FAILED;
+import static com.intel.cosbench.model.WorkloadState.FINISHED;
+import static com.intel.cosbench.model.WorkloadState.PROCESSING;
+import static com.intel.cosbench.model.WorkloadState.QUEUING;
+import static com.intel.cosbench.model.WorkloadState.TERMINATED;
+import static com.intel.cosbench.model.WorkloadState.isStopped;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
-import com.intel.cosbench.config.*;
+import com.intel.cosbench.api.S3Stor.S3Storage;
+import com.intel.cosbench.config.Config;
+import com.intel.cosbench.config.Operation;
+import com.intel.cosbench.config.Stage;
+import com.intel.cosbench.config.Work;
+import com.intel.cosbench.config.WorkloadResolver;
+import com.intel.cosbench.config.XmlConfig;
 import com.intel.cosbench.config.castor.CastorConfigTools;
-import com.intel.cosbench.controller.model.*;
-import com.intel.cosbench.log.*;
+import com.intel.cosbench.config.common.KVConfigParser;
+import com.intel.cosbench.controller.model.ControllerContext;
+import com.intel.cosbench.controller.model.StageContext;
+import com.intel.cosbench.controller.model.StageRegistry;
+import com.intel.cosbench.controller.model.WorkloadContext;
+import com.intel.cosbench.log.LogFactory;
+import com.intel.cosbench.log.Logger;
 import com.intel.cosbench.model.StageState;
-import com.intel.cosbench.service.*;
+import com.intel.cosbench.service.CancelledException;
 import com.intel.cosbench.service.IllegalStateException;
 
 /**
@@ -157,14 +182,29 @@ class WorkloadProcessor {
         while (iter.hasNext()) {
             StageContext stageContext = iter.next();
             if (stageContext.getStage().getName().equals("sync")) {
-            	List<Work> works = stageContext.getStage().getWorks();
-            	for (Work work : works) {
-					work.getSync().getSyncStorage().getConfig();
-				}
+            	while (true) {
+            		List<Work> works = stageContext.getStage().getWorks();
+                	String syncConfig = stageContext.getStage().getConfig();
+                	Config con = KVConfigParser.parse(syncConfig);
+               	 	String srcBucket = con.get("srcBucket");
+               	 	String destBucket = con.get("destBucket");
+               	 	String marker = new String();
+                	for (Work work : works) {
+    					String config = work.getSync().getSyncStorage().getConfig();
+    					setSyncInfo(config, srcBucket, destBucket, marker, work);
+    				}
+                	runStage(stageContext);
+                	if(marker.equals("")){
+                		break;
+                	}
+            	}
+            	iter.remove();
+            }else {
+            	 iter.remove();
+                 runStage(stageContext);
             }
             
-            iter.remove();
-            runStage(stageContext);
+           
         }
         executeTrigger(trigger, false, workloadContext.getId());
         workloadContext.setStopDate(new Date());
@@ -179,6 +219,27 @@ class WorkloadProcessor {
 		}
         workloadContext.setState(FINISHED);
     }
+    
+    private void setSyncInfo(String config, String srcBucket, String destBucket, String marker, Work work){
+ 
+		 Config workCon =  KVConfigParser.parse(config);
+		 
+		 String accesskey = workCon.get("srcAccessKey");
+		 String entry = "accesskey=" + accesskey + ";";
+		 String secretkey = workCon.get("srcSecretKey");
+		 entry = entry + "secretkey=" + secretkey + ";";
+		 String endpoint = workCon.get("syncFrom");
+		 entry = entry + "endpoint=" + endpoint + ";";
+		 Config syncStorageConfig = KVConfigParser.parse(entry);
+			 
+		 S3Storage s3Storage = new S3Storage();
+		 s3Storage.init(syncStorageConfig, LOGGER);
+		 Map<String,Long> objs = s3Storage.listObjects(srcBucket, marker);
+         work.getSync().setObjs(objs);
+         work.getSync().setSrcBucketName(srcBucket);
+         work.getSync().setDestBucketName(destBucket);
+
+   }
 
     private static String millisToHMS(long millis) {
 

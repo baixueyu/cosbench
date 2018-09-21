@@ -76,8 +76,9 @@ class Submitter extends AbstractCommandTasklet<SubmitResponse> {
         mission.setAuth(work.getAuth());
         if (work.getType().equals("sync")) {
         	mission.setStorage(work.getSync().getSyncStorage());
-        	String config = work.getConfig();       
-            //setSyncInfo(config, mission, work);
+        	mission.setObjs(work.getSync().getObjs());
+        	mission.setDestBucketName(work.getSync().getDestBucketName());
+        	mission.setSrcBucketName(work.getSync().getSrcBucketName());
         } else {
         	mission.setStorage(work.getStorage());
         }
@@ -93,38 +94,5 @@ class Submitter extends AbstractCommandTasklet<SubmitResponse> {
         context.setMissionId(id);
     }
     
-   /* private void setSyncInfo(String config, Mission mission, Work work){
-   
-    	 Config con = KVConfigParser.parse(config);
-    	 String srcBucket = con.get("srcBucket");
-    	 String destBucket = con.get("destBucket");
-    	 mission.setSrcBucketName(srcBucket);
-    	 mission.setDestBucketName(destBucket);
-    	 String workConfig =  work.getSync().getSyncStorage().getConfig();
-    	 Config workCon =  KVConfigParser.parse(workConfig);
-    	 
-    	 String accesskey = workCon.get("srcAccessKey");
- 		 String entry = "accesskey=" + accesskey + ";";
- 		 String secretkey = workCon.get("srcSecretKey");
- 		 entry = entry + "secretkey=" + secretkey + ";";
- 		 String endpoint = workCon.get("syncFrom");
- 		 entry = entry + "endpoint=" + endpoint + ";";
- 		 Config syncStorageConfig = KVConfigParser.parse(entry);
-    	 
-    	 S3Storage s3Storage = new S3Storage();
-    	 s3Storage.init(syncStorageConfig, LOGGER);
-    	 Map<String,Long> m = s3Storage.listObjects(srcBucket, "");
-    	 /*
-    	 for (Entry<String, Long> e : m.entrySet()) {
-    		 System.out.println(e.getKey() + "-------" + e.getValue()); 
-    		}
-    	 */
-    	// mission.setObjs(m);
-    	
-    	
-    	
-    	 
-         
-   /* }*/
 
 }

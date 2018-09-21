@@ -236,6 +236,7 @@ public class S3Storage extends NoneStorage {
     		 HashMap<String,Long> objs = new  HashMap<String, Long>();
     		 ListObjectsRequest req = new ListObjectsRequest(bucketName, null, marker, null, 2);
     		 ObjectListing ol = client.listObjects(req);
+    		 marker = ol.getNextMarker();
     		 List<S3ObjectSummary>  objects = ol.getObjectSummaries();
     		 for (S3ObjectSummary os : objects) {
     			objs.put(os.getKey(), os.getSize());

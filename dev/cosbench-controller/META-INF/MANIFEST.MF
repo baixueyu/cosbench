@@ -6,6 +6,8 @@ Bundle-Version: 0.4.1.0
 Bundle-Vendor: intel
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Import-Package: 
+ com.intel.cosbench.api.S3Stor,
+ com.intel.cosbench.api.storage,
  com.intel.cosbench.bench,
  com.intel.cosbench.client.http,
  com.intel.cosbench.config,
