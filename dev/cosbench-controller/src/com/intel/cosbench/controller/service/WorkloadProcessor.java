@@ -187,22 +187,43 @@ class WorkloadProcessor {
             if (stageContext.getStage().getName().equals("sync")) {
             	List<Work> works = stageContext.getStage().getWorks();
             	for (Work work : works) {
-            		while (true) {            		
-            			String syncStr = work.getConfig();
-            			Config syncConfig = KVConfigParser.parse(syncStr);
-            			if (syncConfig.get("sync_type").equals("bucket")) {
-            				String srcBucket = syncConfig.get("srcBucket");
-                       	 	String destBucket = syncConfig.get("destBucket");                       	 	          
-                       	 	String storageConfig = work.getSync().getSyncStorage().getConfig();
-                       	 	setSyncInfo(storageConfig, srcBucket, destBucket, marker, work);
-            			} else {
-            				//TODO for user sync begin
-            				//TODO for user sync end
-            			}
-            			runStage(stageContext);
-            			if(marker.equals("")){
-                    		break;
-            			}                	               	 	               	
+            		String syncStr = work.getConfig();
+        			Config syncConfig = KVConfigParser.parse(syncStr);
+        			String storageConfig = work.getSync().getSyncStorage().getConfig();
+        			String srcBucket = new String();
+        			String destBucket = new String();
+        			List<String> buckets = new ArrayList<String>();
+            		if (syncConfig.get("sync_type").equals("bucket")) {
+        				srcBucket = syncConfig.get("srcBucket");
+                   	 	destBucket = syncConfig.get("destBucket"); 
+                   		if (destBucket.isEmpty()) {
+                   	 		destBucket = srcBucket;
+                   	 	}
+                   	 	while (true) {                   	 	 
+                       	 	Config config = getSrcStorageConfig(storageConfig);
+                       	 	setSyncInfo(config, srcBucket, destBucket, marker, work);
+                			runStage(stageContext);
+                			if(marker.isEmpty()) {
+                				break;
+                			}   
+                   	 	}                  
+            		} else if (syncConfig.get("sync_type").equals("user")) {
+            			Config config = getSrcStorageConfig(storageConfig);
+            			buckets = getSrcBuckets(config);    
+            			while (true) {               			        				
+            				for (String bucketName : buckets) {
+            					srcBucket = destBucket = bucketName;
+            					setSyncInfo(config, srcBucket, destBucket, marker, work);
+            					if (marker.isEmpty()) {
+            						buckets.remove(bucketName);
+            					}
+            				}           
+                			runStage(stageContext);
+                			if(marker.isEmpty() && buckets.size() == 0) {
+                				if (syncConfig.get("sync_type").equals("user"))
+                					break;
+                			}
+            			}           			         			     	               	 	               	
                 	}
             	}
             	iter.remove();
@@ -225,20 +246,29 @@ class WorkloadProcessor {
         workloadContext.setState(FINISHED);
     }
     
-    private void setSyncInfo(String config, String srcBucket, String destBucket, String marker, Work work){
- 
-		 Config workCon =  KVConfigParser.parse(config);
+    private Config getSrcStorageConfig(String storageConfig) {
+    	// TODO Auto-generated method stub
+    	Config workCon =  KVConfigParser.parse(storageConfig);
 		 
-		 String accesskey = workCon.get("srcAccessKey");
-		 String entry = "accesskey=" + accesskey + ";";
-		 String secretkey = workCon.get("srcSecretKey");
-		 entry = entry + "secretkey=" + secretkey + ";";
-		 String endpoint = workCon.get("syncFrom");
-		 entry = entry + "endpoint=" + endpoint + ";";
-		 Config syncStorageConfig = KVConfigParser.parse(entry);
-			 
+    	String accesskey = workCon.get("srcAccessKey");
+    	String entry = "accesskey=" + accesskey + ";";
+    	String secretkey = workCon.get("srcSecretKey");
+    	entry = entry + "secretkey=" + secretkey + ";";
+    	String endpoint = workCon.get("syncFrom");
+    	entry = entry + "endpoint=" + endpoint + ";";
+    	return KVConfigParser.parse(entry);
+	}
+
+	private List<String> getSrcBuckets(Config srcStorageConfig) {
+		// TODO Auto-generated method stub			 
+		S3Storage s3Storage = new S3Storage();
+		s3Storage.init(srcStorageConfig, LOGGER);
+		return s3Storage.listBuckets();
+	}
+
+	private void setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, String marker, Work work){ 
 		 S3Storage s3Storage = new S3Storage();
-		 s3Storage.init(syncStorageConfig, LOGGER);
+		 s3Storage.init(srcStorageConfig, LOGGER);
 		 //Map<String,Long> objs = s3Storage.listObjects(srcBucket, marker);
 		 //TODO just for test begin
 		 Map<String, Long> objs = new HashMap<String, Long>();
@@ -247,11 +277,9 @@ class WorkloadProcessor {
 		 objs.put("obj3", (long) 777);
 		 objs.put("obj4", (long) 888);
 		 //TODO just for test end
-		 
          work.getSync().setObjs(objs);
          work.getSync().setSrcBucketName(srcBucket);
          work.getSync().setDestBucketName(destBucket);
-
    }
 
     private static String millisToHMS(long millis) {
