@@ -72,13 +72,15 @@
 		</field>
 		
 		<field name="destBucketName" type="string">
-			<bind-xml name="srcBucketName" node="attribute" />
+			<bind-xml name="destBucketName" node="attribute" />
 		</field>
 		
-		<field name="objs" collection="map" >
-			<bind-xml name="objs" node="attribute" />
+		<field name="objs" collection="map" type="String,Long">
+			<bind-xml name="destBucketName" node="element" />
 		</field>
-
+		
+		
+	
 	</class>
 
 </mapping>

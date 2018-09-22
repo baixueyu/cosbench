@@ -56,8 +56,6 @@ public class Mission implements Iterable<Operation> {
     private String destBucketName;
     private Map<String, Long> objs;
     
-    
-
     public Mission() {
         /* empty */
     }
@@ -247,8 +245,6 @@ public class Mission implements Iterable<Operation> {
 	public void setDestBucketName(String destBucketName) {
 		this.destBucketName = destBucketName;
 	}
-
-	
 
 	public Map<String, Long> getObjs() {
 		return objs;
