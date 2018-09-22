@@ -125,7 +125,7 @@ public class Syncer extends AbstractOperator {
         //TODO Get object end
         //TODO send object begin
         try {
-        	 session.getApi().syncObject(destBucketName, objectName, in, objSize, config);
+        	session.getWorkContext().getDestStorageApi().syncObject(destBucketName, objectName, in, objSize, config);
         } catch (StorageInterruptedException sie) {
             doLogErr(session.getLogger(), sie.getMessage(), sie);
             throw new AbortedException();
