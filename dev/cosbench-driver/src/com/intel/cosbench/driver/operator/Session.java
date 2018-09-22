@@ -22,6 +22,7 @@ import java.util.Random;
 import com.intel.cosbench.api.storage.StorageAPI;
 import com.intel.cosbench.bench.ErrorStatistics;
 import com.intel.cosbench.log.Logger;
+import com.intel.cosbench.driver.model.*;
 
 public interface Session {
 
@@ -38,6 +39,7 @@ public interface Session {
     public OperationListener getListener();
     
     public ErrorStatistics getErrorStatistics();
+    public WorkerContext getWorkContext();
 	
 
 }

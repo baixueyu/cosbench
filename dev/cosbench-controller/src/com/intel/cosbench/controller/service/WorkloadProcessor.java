@@ -17,6 +17,8 @@ limitations under the License.
 
 package com.intel.cosbench.controller.service;
 
+import java.util.*;
+
 import static com.intel.cosbench.model.WorkloadState.CANCELLED;
 import static com.intel.cosbench.model.WorkloadState.FAILED;
 import static com.intel.cosbench.model.WorkloadState.FINISHED;
@@ -181,30 +183,33 @@ class WorkloadProcessor {
         executeTrigger(trigger, true, workloadContext.getId());
         while (iter.hasNext()) {
             StageContext stageContext = iter.next();
+            String marker = new String();   
             if (stageContext.getStage().getName().equals("sync")) {
-            	while (true) {
-            		List<Work> works = stageContext.getStage().getWorks();
-                	String syncConfig = stageContext.getStage().getConfig();
-                	Config con = KVConfigParser.parse(syncConfig);
-               	 	String srcBucket = con.get("srcBucket");
-               	 	String destBucket = con.get("destBucket");
-               	 	String marker = new String();
-                	for (Work work : works) {
-    					String config = work.getSync().getSyncStorage().getConfig();
-    					setSyncInfo(config, srcBucket, destBucket, marker, work);
-    				}
-                	runStage(stageContext);
-                	if(marker.equals("")){
-                		break;
+            	List<Work> works = stageContext.getStage().getWorks();
+            	for (Work work : works) {
+            		while (true) {            		
+            			String syncStr = work.getConfig();
+            			Config syncConfig = KVConfigParser.parse(syncStr);
+            			if (syncConfig.get("sync_type").equals("bucket")) {
+            				String srcBucket = syncConfig.get("srcBucket");
+                       	 	String destBucket = syncConfig.get("destBucket");                       	 	          
+                       	 	String storageConfig = work.getSync().getSyncStorage().getConfig();
+                       	 	setSyncInfo(storageConfig, srcBucket, destBucket, marker, work);
+            			} else {
+            				//TODO for user sync begin
+            				//TODO for user sync end
+            			}
+            			runStage(stageContext);
+            			if(marker.equals("")){
+                    		break;
+            			}                	               	 	               	
                 	}
             	}
             	iter.remove();
-            }else {
+            } else {
             	 iter.remove();
                  runStage(stageContext);
-            }
-            
-           
+            }          
         }
         executeTrigger(trigger, false, workloadContext.getId());
         workloadContext.setStopDate(new Date());
@@ -234,7 +239,15 @@ class WorkloadProcessor {
 			 
 		 S3Storage s3Storage = new S3Storage();
 		 s3Storage.init(syncStorageConfig, LOGGER);
-		 Map<String,Long> objs = s3Storage.listObjects(srcBucket, marker);
+		 //Map<String,Long> objs = s3Storage.listObjects(srcBucket, marker);
+		 //TODO just for test begin
+		 Map<String, Long> objs = new HashMap<String, Long>();
+		 objs.put("obj1", (long) 555);
+		 objs.put("obj2", (long) 666);
+		 objs.put("obj3", (long) 777);
+		 objs.put("obj4", (long) 888);
+		 //TODO just for test end
+		 
          work.getSync().setObjs(objs);
          work.getSync().setSrcBucketName(srcBucket);
          work.getSync().setDestBucketName(destBucket);

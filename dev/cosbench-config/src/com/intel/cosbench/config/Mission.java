@@ -54,7 +54,7 @@ public class Mission implements Iterable<Operation> {
     private List<Operation> operations;
     private String srcBucketName;
     private String destBucketName;
-    private Map<String,Long> objs;
+    private Map<String, Long> objs;
     
     
 

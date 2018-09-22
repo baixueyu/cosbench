@@ -109,6 +109,10 @@ class WorkAgent extends AbstractAgent implements Session, OperationListener {
     public StorageAPI getApi() {
         return workerContext.getStorageApi();
     }
+    @Override 
+    public WorkerContext getWorkContext() {
+    	return workerContext;
+    }
 
     @Override
     public Logger getLogger() {

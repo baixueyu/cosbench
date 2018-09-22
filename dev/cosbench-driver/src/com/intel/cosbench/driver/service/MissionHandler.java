@@ -198,16 +198,15 @@ class MissionHandler {
         int offset = mission.getOffset();
         if (getType() != null &&  getType().equals("sync")) {
         	//TODO for sync operator set object_list to registry, divide equally
-        	//List<String> objs = mission.getObjs();
-        	//just for test begin
-        	List<String> objs = new LinkedList<String>();
-        	objs.add("obj1");
-        	objs.add("obj2");
-        	objs.add("obj3");
-        	objs.add("obj4"); 	
-        	//just for test end
+        	//Map<String, Long> objs = mission.getObjs();
+        	//TODO just for test
+        	Map<String, Long> objs = new HashMap<String, Long>();
+        	objs.put("obj1", (long) 111);
+        	objs.put("obj2", (long) 222);
+        	objs.put("obj3", (long) 333);
+        	objs.put("obj4", (long) 444);
         	int objSize = objs.size();
-        	List<String> sync_objs = null;
+        	
         	int listSize = 0;
         	if ((objSize % workers) != 0) {
         		listSize = objSize / workers + 1; 
@@ -220,14 +219,23 @@ class MissionHandler {
          		//Get subList start & end pos
          		start = start * listSize * (idx - 1);
          		end = end * listSize * idx - 1;
-         		end = ((end + 1) >= objSize ? objSize : end); 
-        		// Get sync subList
-         		sync_objs = objs.subList(start, end);
-         		//mission.setObjs(sync_objs);
-         		//TODO set srcBucketName & destBucketName
-         		//mission.setSrcBucketName(srcBucketName);
+         		end = ((end + 1) >= objSize ? objSize : end);
+         		//sub map
+         		int sub = start;
+         		Map<String, Long> syncObjs = new HashMap<String, Long>();
+         		for (String key : objs.keySet()) {
+         			if (sub == end )
+         				break;
+         			syncObjs.put(key, objs.get(key));
+         			sub++;
+         		}
+
+        		// Get sync subMap
+         		mission.setObjs(syncObjs);
+         		//set srcBucketName & destBucketName
+         		//mission.setSrcBucketName(msrcBucketName);
          		//mission.setDestBucketName(destBucketName);
-         		registry.addWorker(createWorkerContext(idx + offset, mission));        		
+         		registry.addWorker(createWorkerContext(idx + offset, mission));
         	}
         } else {
             for (int idx = 1; idx <= workers; idx++) {

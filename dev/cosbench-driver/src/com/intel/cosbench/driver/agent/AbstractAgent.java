@@ -36,6 +36,10 @@ abstract class AbstractAgent implements Agent {
     public void setWorkerContext(WorkerContext workerContext) {
         this.workerContext = workerContext;
     }
+    
+    public WorkerContext getWorkerContext() {
+        return this.workerContext;
+    }
 
     @Override
     public Agent call() throws Exception {
