@@ -75,7 +75,7 @@
 			<bind-xml name="destBucketName" node="attribute" />
 		</field>
 		
-		<field name="objs" collection="map" type="String,Long">
+		<field name="objs" collection="map" >
 			<bind-xml name="destBucketName" node="element" />
 		</field>
 		
