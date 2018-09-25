@@ -59,6 +59,26 @@ public class Mission implements Iterable<Operation> {
     public Mission() {
         /* empty */
     }
+    public Mission(Mission m) {
+    	this.name = m.name;
+    	this.workers = m.workers;
+        this.offset = m.offset;
+        this.interval = m.interval;
+        this.division = m.division;
+        this.runtime = m.runtime;
+        this.rampup = m.rampup;
+        this.rampdown = m.rampdown;
+        this.totalOps = m.totalOps;
+        this.totalBytes = m.totalBytes;
+        this.totalWorkers = m.totalWorkers;
+        this.config = m.config;
+        this.auth = m.auth;
+       	this.storage = m.storage;
+        this.operations = m.operations;
+        this.srcBucketName = m.srcBucketName;
+        this.destBucketName = m.destBucketName;
+        this.objs = m.objs;
+    }
 
     public String getName() {
         return name;

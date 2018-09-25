@@ -198,13 +198,13 @@ class MissionHandler {
         int offset = mission.getOffset();
         if (getType() != null &&  getType().equals("sync")) {
         	//TODO for sync operator set object_list to registry, divide equally
-        	//Map<String, Long> objs = mission.getObjs();
+        	Map<String, Long> objs = mission.getObjs();
         	//TODO just for test
-        	Map<String, Long> objs = new HashMap<String, Long>();
-        	objs.put("obj1", (long) 111);
-        	objs.put("obj2", (long) 222);
-        	objs.put("obj3", (long) 333);
-        	objs.put("obj4", (long) 444);
+        	//Map<String, Long> objs = new HashMap<String, Long>();
+        	//objs.put("obj1", (long) 111);
+        	//objs.put("obj2", (long) 222);
+        	//objs.put("obj3", (long) 333);
+        	//objs.put("obj4", (long) 444);
         	int objSize = objs.size();        	
         	int listSize  = objSize / workers;
         	//every workers can deal one objs sync
@@ -212,35 +212,45 @@ class MissionHandler {
         		listSize = 1;
         	}     	
         	int count = objSize / listSize;   
-            int yu = objSize % listSize;   
+            int yu = objSize % listSize;      
             for (int i = 0; i <= count; i++) {  
+            	Mission taskMission = new Mission(mission);
             	Map<String, Long> syncObjs = new HashMap<String, Long>();  
                 if (i == count) {   
                 	int sub = i * listSize;
-                	for (String key : objs.keySet()) {
+                	Iterator<String> iter = objs.keySet().iterator();
+                	while (iter.hasNext()) {
                 		if (sub == (i * listSize + yu)) {
                 			break;
                 		}
+                		String key = iter.next();
                 		syncObjs.put(key, objs.get(key)); 
+                		iter.remove();
                 		sub++;
-                	}                    
+                	}                       
                 } else {   
                 	int sub = i * listSize;
-                	for (String key : objs.keySet()) {
+                	Iterator<String> iter = objs.keySet().iterator();
+                	while (iter.hasNext()) {
                 		if (sub == listSize * (i + 1)) {
                 			break;
                 		}
-                		syncObjs.put(key, objs.get(key));
-             			sub++;
-                	}
+                		String key = iter.next();
+                		syncObjs.put(key, objs.get(key)); 
+                		iter.remove();
+                		sub++;
+                	}  
                 }
                 
                 // Get sync subMap
-                mission.setObjs(syncObjs);
+                if (syncObjs.size() == 0) {
+                	break;
+                }
+                taskMission.setObjs(syncObjs);
                 //set srcBucketName & destBucketName
                 //mission.setSrcBucketName(msrcBucketName);
                 //mission.setDestBucketName(destBucketName);
-                registry.addWorker(createWorkerContext(i + offset, mission));
+                registry.addWorker(createWorkerContext(i + offset + 1, taskMission));
             }
         } else {
             for (int idx = 1; idx <= workers; idx++) {

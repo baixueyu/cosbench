@@ -269,13 +269,13 @@ class WorkloadProcessor {
 	private void setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, String marker, Work work){ 
 		 S3Storage s3Storage = new S3Storage();
 		 s3Storage.init(srcStorageConfig, LOGGER);
-		 //Map<String,Long> objs = s3Storage.listObjects(srcBucket, marker);
+		 Map<String,Long> objs = s3Storage.listObjects(srcBucket, marker);
 		 //TODO just for test begin
-		 Map<String, Long> objs = new HashMap<String, Long>();
-		 objs.put("obj1", (long) 555);
-		 objs.put("obj2", (long) 666);
-		 objs.put("obj3", (long) 777);
-		 objs.put("obj4", (long) 888);
+		 //Map<String, Long> objs = new HashMap<String, Long>();
+		 //objs.put("obj1", (long) 555);
+		 //objs.put("obj2", (long) 666);
+		 //objs.put("obj3", (long) 777);
+		 //objs.put("obj4", (long) 888);
 		 //TODO just for test end
          work.getSync().setObjs(objs);
          work.getSync().setSrcBucketName(srcBucket);
