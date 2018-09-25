@@ -205,38 +205,43 @@ class MissionHandler {
         	objs.put("obj2", (long) 222);
         	objs.put("obj3", (long) 333);
         	objs.put("obj4", (long) 444);
-        	int objSize = objs.size();
-        	
-        	int listSize = 0;
-        	if ((objSize % workers) != 0) {
-        		listSize = objSize / workers + 1; 
-        	} else {
-        		listSize = objSize / workers;
-        	}        	
-        	int start = 1;
-        	int end = 1;
-         	for (int idx = 1; idx <= workers; idx++) {
-         		//Get subList start & end pos
-         		start = start * listSize * (idx - 1);
-         		end = end * listSize * idx - 1;
-         		end = ((end + 1) >= objSize ? objSize : end);
-         		//sub map
-         		int sub = start;
-         		Map<String, Long> syncObjs = new HashMap<String, Long>();
-         		for (String key : objs.keySet()) {
-         			if (sub == end )
-         				break;
-         			syncObjs.put(key, objs.get(key));
-         			sub++;
-         		}
-
-        		// Get sync subMap
-         		mission.setObjs(syncObjs);
-         		//set srcBucketName & destBucketName
-         		//mission.setSrcBucketName(msrcBucketName);
-         		//mission.setDestBucketName(destBucketName);
-         		registry.addWorker(createWorkerContext(idx + offset, mission));
-        	}
+        	int objSize = objs.size();        	
+        	int listSize  = objSize / workers;
+        	//every workers can deal one objs sync
+        	if (objSize <= workers) {
+        		listSize = 1;
+        	}     	
+        	int count = objSize / listSize;   
+            int yu = objSize % listSize;   
+            for (int i = 0; i <= count; i++) {  
+            	Map<String, Long> syncObjs = new HashMap<String, Long>();  
+                if (i == count) {   
+                	int sub = i * listSize;
+                	for (String key : objs.keySet()) {
+                		if (sub == (i * listSize + yu)) {
+                			break;
+                		}
+                		syncObjs.put(key, objs.get(key)); 
+                		sub++;
+                	}                    
+                } else {   
+                	int sub = i * listSize;
+                	for (String key : objs.keySet()) {
+                		if (sub == listSize * (i + 1)) {
+                			break;
+                		}
+                		syncObjs.put(key, objs.get(key));
+             			sub++;
+                	}
+                }
+                
+                // Get sync subMap
+                mission.setObjs(syncObjs);
+                //set srcBucketName & destBucketName
+                //mission.setSrcBucketName(msrcBucketName);
+                //mission.setDestBucketName(destBucketName);
+                registry.addWorker(createWorkerContext(i + offset, mission));
+            }
         } else {
             for (int idx = 1; idx <= workers; idx++) {
             	registry.addWorker(createWorkerContext(idx + offset, mission));

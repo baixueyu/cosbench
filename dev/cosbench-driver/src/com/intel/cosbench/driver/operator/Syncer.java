@@ -89,6 +89,21 @@ public class Syncer extends AbstractOperator {
     	Map<String, Long> syncObjs = session.getWorkContext().getMission().getObjs();
     	String srcBucketName = session.getWorkContext().getMission().getSrcBucketName();
     	String destBucketName = session.getWorkContext().getMission().getDestBucketName();
+    	//TODO destBucketName exist?  begin
+    	try {
+    		session.getWorkContext().getDestStorageApi().createContainer(destBucketName, config);
+    	} catch (Exception e) {
+        	isUnauthorizedException(e, session);
+        	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);      
+        } 
+    	//TODO destBucketName exist? end
+
+
+
+
+
+
+
     	for (String key : syncObjs.keySet()) {
     		String objectName = key;
     		long objSize = syncObjs.get(key);

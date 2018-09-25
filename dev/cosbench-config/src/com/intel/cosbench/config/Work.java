@@ -360,7 +360,6 @@ public class Work implements Iterable<Operation> {
 		setRuntime(0);
 		setDefaultAfr(0);
 		setTotalBytes(0);
-		setWorkers(1);
 		setTotalOps(getWorkers());
 		Operation op = new Operation();
 		op.setType("sync");
