@@ -231,9 +231,9 @@ public class S3Storage extends NoneStorage {
         }
     }
     
-    public HashMap<String, Long> listObjects(String bucketName, String marker){
+    public String listObjects(String bucketName, String marker , Map<String, Long> objs){
     	try {
-    		 HashMap<String,Long> objs = new  HashMap<String, Long>();
+    		 //HashMap<String,Long> objs = new  HashMap<String, Long>();
     		 ListObjectsRequest req = new ListObjectsRequest(bucketName, null, marker, null, 2);
     		 ObjectListing ol = client.listObjects(req);
     		 marker = ol.getNextMarker();
@@ -243,7 +243,7 @@ public class S3Storage extends NoneStorage {
 				//os.getKey();
 			}
    		 	//client.listObjects(bucketName);
-    		 return objs;
+    		 return marker;
         } catch (Exception e) {
             throw new StorageException(e);
         }

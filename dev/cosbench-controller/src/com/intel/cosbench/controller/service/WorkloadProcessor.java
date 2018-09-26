@@ -30,6 +30,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -183,7 +184,7 @@ class WorkloadProcessor {
         executeTrigger(trigger, true, workloadContext.getId());
         while (iter.hasNext()) {
             StageContext stageContext = iter.next();
-            String marker = new String();   
+            //String marker = new String();   
             if (stageContext.getStage().getName().equals("sync")) {
             	List<Work> works = stageContext.getStage().getWorks();
             	for (Work work : works) {
@@ -199,30 +200,32 @@ class WorkloadProcessor {
                    		if (destBucket.isEmpty()) {
                    	 		destBucket = srcBucket;
                    	 	}
-                   	 	while (true) {                   	 	 
+                   		
+                   		String nextMarker = new String();
+                   	 	while (true) {                    	
                        	 	Config config = getSrcStorageConfig(storageConfig);
-                       	 	setSyncInfo(config, srcBucket, destBucket, marker, work);
+                       	 	nextMarker = setSyncInfo(config, srcBucket, destBucket, nextMarker, work);         
                 			runStage(stageContext);
-                			if(marker.isEmpty()) {
+                			if(nextMarker.isEmpty()) {
                 				break;
                 			}   
                    	 	}                  
             		} else if (syncConfig.get("sync_type").equals("user")) {
             			Config config = getSrcStorageConfig(storageConfig);
-            			buckets = getSrcBuckets(config);    
+            			buckets = getSrcBuckets(config);   
+            			String nextMarker = new String();
             			while (true) {               			        				
             				for (String bucketName : buckets) {
             					srcBucket = destBucket = bucketName;
-            					setSyncInfo(config, srcBucket, destBucket, marker, work);
-            					if (marker.isEmpty()) {
-            						buckets.remove(bucketName);
-            					}
+            					while (true) {                    	
+                               	 	config = getSrcStorageConfig(storageConfig);
+                               	 	nextMarker = setSyncInfo(config, srcBucket, destBucket, nextMarker, work);         
+                        			runStage(stageContext);
+                        			if(nextMarker.isEmpty()) {
+                        				break;
+                        			}   
+                           	 	}
             				}           
-                			runStage(stageContext);
-                			if(marker.isEmpty() && buckets.size() == 0) {
-                				if (syncConfig.get("sync_type").equals("user"))
-                					break;
-                			}
             			}           			         			     	               	 	               	
                 	}
             	}
@@ -266,10 +269,11 @@ class WorkloadProcessor {
 		return s3Storage.listBuckets();
 	}
 
-	private void setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, String marker, Work work){ 
+	private String setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, String marker, Work work ){ 
 		 S3Storage s3Storage = new S3Storage();
 		 s3Storage.init(srcStorageConfig, LOGGER);
-		 Map<String,Long> objs = s3Storage.listObjects(srcBucket, marker);
+		 Map<String, Long> objs = new HashMap<String, Long>();
+		 String nextMarker = s3Storage.listObjects(srcBucket, marker , objs);
 		 //TODO just for test begin
 		 //Map<String, Long> objs = new HashMap<String, Long>();
 		 //objs.put("obj1", (long) 555);
@@ -280,6 +284,7 @@ class WorkloadProcessor {
          work.getSync().setObjs(objs);
          work.getSync().setSrcBucketName(srcBucket);
          work.getSync().setDestBucketName(destBucket);
+         return nextMarker;
    }
 
     private static String millisToHMS(long millis) {
