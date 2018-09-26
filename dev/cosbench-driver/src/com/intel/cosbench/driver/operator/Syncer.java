@@ -1,8 +1,6 @@
 package com.intel.cosbench.driver.operator;
 
 import java.io.InputStream;
-import java.util.Date;
-import java.util.Random;
 import java.util.*;
 
 import org.apache.commons.io.IOUtils;
@@ -97,13 +95,6 @@ public class Syncer extends AbstractOperator {
         	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);      
         } 
     	//TODO destBucketName exist? end
-
-
-
-
-
-
-
     	for (String key : syncObjs.keySet()) {
     		String objectName = key;
     		long objSize = syncObjs.get(key);
@@ -139,6 +130,7 @@ public class Syncer extends AbstractOperator {
         } 
         //TODO Get object end
         //TODO send object begin
+        long start = System.nanoTime();
         try {
         	session.getWorkContext().getDestStorageApi().syncObject(destBucketName, objectName, in, objSize, config);
         } catch (StorageInterruptedException sie) {
@@ -158,8 +150,6 @@ public class Syncer extends AbstractOperator {
         
         long end = System.nanoTime();
 		return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(),
-				op.getName(), false); 
-				//true, (end - start) / 1000000,
-				//cin.getXferTime(), cin.getByteCount());
+				op.getName(), true, (end - start) / 1000000, (end - start) / 1000000, objSize);
     }
 }
