@@ -2,15 +2,63 @@
 <classpath>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="C:/Users/yangfuqiang/Documents/Tencent Files/1270440792/FileRecv/lib/commons-codec-1.9.jar"/>
-	<classpathentry kind="lib" path="C:/Users/yangfuqiang/Documents/Tencent Files/1270440792/FileRecv/lib/commons-logging-1.2.jar"/>
-	<classpathentry kind="lib" path="C:/Users/yangfuqiang/Documents/Tencent Files/1270440792/FileRecv/lib/fluent-hc-4.5.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/yangfuqiang/Documents/Tencent Files/1270440792/FileRecv/lib/httpclient-4.5.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/yangfuqiang/Documents/Tencent Files/1270440792/FileRecv/lib/httpclient-cache-4.5.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/yangfuqiang/Documents/Tencent Files/1270440792/FileRecv/lib/httpclient-win-4.5.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/yangfuqiang/Documents/Tencent Files/1270440792/FileRecv/lib/httpcore-4.4.6.jar"/>
-	<classpathentry kind="lib" path="C:/Users/yangfuqiang/Documents/Tencent Files/1270440792/FileRecv/lib/httpmime-4.5.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/yangfuqiang/Documents/Tencent Files/1270440792/FileRecv/lib/jna-4.1.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/yangfuqiang/Documents/Tencent Files/1270440792/FileRecv/lib/jna-platform-4.1.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.freemarker-2.3.20.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.javax.activation-1.1.1.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.javax.annotation-1.0.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.javax.ejb-3.0.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.javax.el-1.0.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.javax.jms-1.1.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.javax.mail-1.4.1.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.javax.persistence-1.99.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.javax.servlet.jsp-2.1.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.javax.servlet-2.5.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.javax.transaction-1.1.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.javax.xml.bind-2.2.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.javax.xml.rpc-1.1.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.javax.xml.soap-1.3.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.javax.xml.stream-1.0.1.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.javax.xml.ws-2.1.1.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.aopalliance-1.0.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.catalina-6.0.16.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.commons.beanutils-1.7.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.commons.codec-1.3.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.commons.collections-3.2.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.commons.configuration-1.5.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.commons.digester-1.8.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.commons.fileupload-1.2.1.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.commons.io-1.4.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.commons.jxpath-1.2.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.commons.lang-2.5.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.coyote-6.0.16.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.juli.extras-6.0.16.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.log4j-1.2.15.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.regexp-1.5.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.xerces-2.8.1.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.xml.resolver-1.2.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.apache.xmlcommons-1.3.3.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.castor-1.2.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.codehaus.jackson.mapper-1.4.2.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.codehaus.jackson-1.4.2.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.jdom-1.1.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.org.joda.time-1.6.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.slf4j.api-1.5.6.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.slf4j.log4j-1.5.6.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/com.springsource.slf4j.org.apache.commons.logging-1.5.6.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/org.apache.httpcomponents.httpclient_4.1.3.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/org.apache.httpcomponents.httpcore_4.1.4.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/org.springframework.aop-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/org.springframework.asm-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/org.springframework.beans-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/org.springframework.context.support-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/org.springframework.context-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/org.springframework.core-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/org.springframework.expression-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/org.springframework.web.servlet-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/org.springframework.web-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/spring-osgi-core-2.0.0.M1.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/spring-osgi-extender-2.0.0.M1.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/spring-osgi-io-2.0.0.M1.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/spring-osgi-web-2.0.0.M1.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/spring-osgi-web-extender-2.0.0.M1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

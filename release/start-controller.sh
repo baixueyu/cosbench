@@ -22,7 +22,7 @@
 SERVICE_NAME=controller
 VERSION=`cat VERSION`
 
-OSGI_BUNDLES="cosbench-log_${VERSION} cosbench-tomcat_${VERSION} cosbench-config_${VERSION} cosbench-core_${VERSION} cosbench-core-web_${VERSION} cosbench-controller_${VERSION} cosbench-controller-web_${VERSION}"
+OSGI_BUNDLES="cosbench-log_${VERSION} cosbench-tomcat_${VERSION} cosbench-config_${VERSION} cosbench-core_${VERSION} cosbench-core-web_${VERSION} cosbench-api_${VERSION}  cosbench-s3_${VERSION} cosbench-controller_${VERSION} cosbench-controller-web_${VERSION}"
 
 OSGI_CONSOLE_PORT=19089
 

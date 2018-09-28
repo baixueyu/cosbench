@@ -209,7 +209,7 @@ class WorkloadProcessor {
                        	 	Config config = getSrcStorageConfig(storageConfig);
                        	 	nextMarker = setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext);         
                 			runStage(stageContext);
-                			if(nextMarker.isEmpty()) {
+                			if(nextMarker == null || nextMarker.length() <= 0) {
                 				break;
                 			}   
                    	 	}                  
@@ -224,7 +224,7 @@ class WorkloadProcessor {
                                	 	config = getSrcStorageConfig(storageConfig);
                                	 	nextMarker = setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext);         
                         			runStage(stageContext);
-                        			if(nextMarker.isEmpty()) {
+                        			if(nextMarker == null || nextMarker.length() <= 0) {
                         				break;
                         			}   
                            	 	}
