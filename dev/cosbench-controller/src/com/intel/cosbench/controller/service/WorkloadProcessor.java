@@ -28,6 +28,7 @@ import static com.intel.cosbench.model.WorkloadState.TERMINATED;
 import static com.intel.cosbench.model.WorkloadState.isStopped;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -52,6 +53,8 @@ import com.intel.cosbench.config.common.KVConfigParser;
 import com.intel.cosbench.controller.model.ControllerContext;
 import com.intel.cosbench.controller.model.StageContext;
 import com.intel.cosbench.controller.model.StageRegistry;
+import com.intel.cosbench.controller.model.TaskContext;
+import com.intel.cosbench.controller.model.TaskRegistry;
 import com.intel.cosbench.controller.model.WorkloadContext;
 import com.intel.cosbench.log.LogFactory;
 import com.intel.cosbench.log.Logger;
@@ -204,7 +207,7 @@ class WorkloadProcessor {
                    		String nextMarker = new String();
                    	 	while (true) {                    	
                        	 	Config config = getSrcStorageConfig(storageConfig);
-                       	 	nextMarker = setSyncInfo(config, srcBucket, destBucket, nextMarker, work);         
+                       	 	nextMarker = setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext);         
                 			runStage(stageContext);
                 			if(nextMarker.isEmpty()) {
                 				break;
@@ -219,7 +222,7 @@ class WorkloadProcessor {
             					srcBucket = destBucket = bucketName;
             					while (true) {                    	
                                	 	config = getSrcStorageConfig(storageConfig);
-                               	 	nextMarker = setSyncInfo(config, srcBucket, destBucket, nextMarker, work);         
+                               	 	nextMarker = setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext);         
                         			runStage(stageContext);
                         			if(nextMarker.isEmpty()) {
                         				break;
@@ -269,11 +272,18 @@ class WorkloadProcessor {
 		return s3Storage.listBuckets();
 	}
 
-	private String setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, String marker, Work work ){ 
+	private String setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, String marker, Work work, StageContext stageContext){
+		 List<Map<String, Long>> objsList = new ArrayList<Map<String,Long>>(); 
+		 int drivers = controllerContext.getDriverCount();
 		 S3Storage s3Storage = new S3Storage();
 		 s3Storage.init(srcStorageConfig, LOGGER);
-		 Map<String, Long> objs = new HashMap<String, Long>();
-		 String nextMarker = s3Storage.listObjects(srcBucket, marker , objs);
+		 //String nextMarker;
+		 for (int i=0; i<drivers; i++){
+			 Map<String, Long> objs = new HashMap<String, Long>();
+			 marker = s3Storage.listObjects(srcBucket, marker , objs);
+			 objsList.add(objs);
+		 }
+		 
 		 //TODO just for test begin
 		 //Map<String, Long> objs = new HashMap<String, Long>();
 		 //objs.put("obj1", (long) 555);
@@ -281,10 +291,12 @@ class WorkloadProcessor {
 		 //objs.put("obj3", (long) 777);
 		 //objs.put("obj4", (long) 888);
 		 //TODO just for test end
-         work.getSync().setObjs(objs);
+         //work.getSync().setObjs(objs);
+		 stageContext.setObjsList(objsList);
          work.getSync().setSrcBucketName(srcBucket);
          work.getSync().setDestBucketName(destBucket);
-         return nextMarker;
+         
+         return marker;
    }
 
     private static String millisToHMS(long millis) {
