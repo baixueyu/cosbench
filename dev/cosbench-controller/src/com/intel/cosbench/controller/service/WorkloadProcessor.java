@@ -197,6 +197,15 @@ class WorkloadProcessor {
         			String srcBucket = new String();
         			String destBucket = new String();
         			List<String> buckets = new ArrayList<String>();
+        			int syncNum;
+        			try {
+        			  syncNum = syncConfig.getInt("syncNum");
+        			  if (syncNum <= 0) {
+        				  syncNum = 1000;
+        			  }
+        			} catch (Exception e) {
+        	            syncNum = 1000;
+        			}
             		if (syncConfig.get("sync_type").equals("bucket")) {
         				srcBucket = syncConfig.get("srcBucket");
                    	 	destBucket = syncConfig.get("destBucket"); 
@@ -207,7 +216,7 @@ class WorkloadProcessor {
                    		String nextMarker = new String();
                    	 	while (true) {                    	
                        	 	Config config = getSrcStorageConfig(storageConfig);
-                       	 	nextMarker = setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext);         
+                       	 	nextMarker = setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext, syncNum);         
                 			runStage(stageContext);
                 			if(nextMarker == null || nextMarker.length() <= 0) {
                 				break;
@@ -222,7 +231,7 @@ class WorkloadProcessor {
             					srcBucket = destBucket = bucketName;
             					while (true) {                    	
                                	 	config = getSrcStorageConfig(storageConfig);
-                               	 	nextMarker = setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext);         
+                               	 	nextMarker = setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext, syncNum);         
                         			runStage(stageContext);
                         			if(nextMarker == null || nextMarker.length() <= 0) {
                         				break;
@@ -272,7 +281,7 @@ class WorkloadProcessor {
 		return s3Storage.listBuckets();
 	}
 
-	private String setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, String marker, Work work, StageContext stageContext){
+	private String setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, String marker, Work work, StageContext stageContext, int syncNum){
 		 List<Map<String, Long>> objsList = new ArrayList<Map<String,Long>>(); 
 		 int drivers = controllerContext.getDriverCount();
 		 S3Storage s3Storage = new S3Storage();
@@ -280,7 +289,7 @@ class WorkloadProcessor {
 		 //String nextMarker;
 		 for (int i=0; i<drivers; i++){
 			 Map<String, Long> objs = new HashMap<String, Long>();
-			 marker = s3Storage.listObjects(srcBucket, marker , objs);
+			 marker = s3Storage.listObjects(srcBucket, marker, objs, syncNum);
 			 objsList.add(objs);
 		 }
 		 

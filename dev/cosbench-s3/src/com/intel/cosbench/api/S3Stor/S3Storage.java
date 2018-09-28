@@ -231,10 +231,10 @@ public class S3Storage extends NoneStorage {
         }
     }
     
-    public String listObjects(String bucketName, String marker , Map<String, Long> objs){
+    public String listObjects(String bucketName, String marker , Map<String, Long> objs, int num){
     	try {
     		 //HashMap<String,Long> objs = new  HashMap<String, Long>();
-    		 ListObjectsRequest req = new ListObjectsRequest(bucketName, null, marker, null, 2);
+    		 ListObjectsRequest req = new ListObjectsRequest(bucketName, null, marker, null, num);
     		 ObjectListing ol = client.listObjects(req);
     		 marker = ol.getNextMarker();
     		 List<S3ObjectSummary>  objects = ol.getObjectSummaries();
