@@ -30,15 +30,21 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.GetObjectMetadataRequest;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ListBucketsRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.S3VersionSummary;
+import com.amazonaws.services.s3.model.VersionListing;
 import com.amazonaws.services.s3.internal.SkipMd5CheckStrategy;
 import com.intel.cosbench.api.context.AuthContext;
 import com.intel.cosbench.api.storage.NoneStorage;
+import com.intel.cosbench.api.storage.StorageAPI;
 import com.intel.cosbench.api.storage.StorageException;
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.Logger;
@@ -97,7 +103,11 @@ public class S3Storage extends NoneStorage {
         logger.debug("S3 client has been initialized");
     }
     
-    @Override
+    public AmazonS3 getClient() {
+		return client;
+	}
+
+	@Override
     public void setAuthContext(AuthContext info) {
         super.setAuthContext(info);
 //        try {
@@ -128,6 +138,20 @@ public class S3Storage extends NoneStorage {
         }
         return stream;
     }
+	
+	  public InputStream getObject(String container, String object, String versionId, Config config) {
+	        super.getObject(container, object, config);
+	        InputStream stream;
+	        try {
+	        	
+	            S3Object s3Obj = client.getObject(new GetObjectRequest(container, object, versionId));
+	            stream = s3Obj.getObjectContent();
+	            
+	        } catch (Exception e) {
+	            throw new StorageException(e);
+	        }
+	        return stream;
+	    }
 
     @Override
     public void createContainer(String container, Config config) {
@@ -136,6 +160,23 @@ public class S3Storage extends NoneStorage {
         	if(!client.doesBucketExist(container)) {
 	        	
 	            client.createBucket(container);
+        	}
+        } catch (Exception e) {
+            throw new StorageException(e);
+        }
+    }
+    
+    public void createContainer(String container, StorageAPI  srcS3Storage, Config config) {
+        
+        try {
+        	if(!client.doesBucketExist(container)) {
+	        	
+	            client.createBucket(container);            
+	            S3Storage s3 = (S3Storage) srcS3Storage;
+	            AmazonS3 srcClient = s3.getClient();	            
+	            //srcClient.getBucketAcl(container);
+	            client.setBucketAcl(container, srcClient.getBucketAcl(container));
+	           
         	}
         } catch (Exception e) {
             throw new StorageException(e);
@@ -165,7 +206,7 @@ public class S3Storage extends NoneStorage {
     		ObjectMetadata metadata = new ObjectMetadata();
     		metadata.setContentLength(length);
     		metadata.setContentType("application/octet-stream");
-    		PutObjectRequest request =new PutObjectRequest(container, object, data, metadata);
+    		PutObjectRequest request = new PutObjectRequest(container, object, data, metadata);
     		request.getRequestClientOptions().setReadLimit(15728640); //15MB
         	client.putObject(request);       
         } catch (Exception e) {
@@ -241,6 +282,42 @@ public class S3Storage extends NoneStorage {
     		 for (S3ObjectSummary os : objects) {
     			objs.put(os.getKey(), os.getSize());
 				//os.getKey();
+			}
+   		 	//client.listObjects(bucketName);
+    		 return marker;
+        } catch (Exception e) {
+            throw new StorageException(e);
+        }
+    }
+    
+   
+    public void syncObject(String container, String object, InputStream data,
+            String versionId, StorageAPI  srcS3Storage, Config config) {    	
+        //super.createObject(container, object, data, length, config);
+        try {
+        	S3Storage s3 = (S3Storage) srcS3Storage;
+            AmazonS3 srcClient = s3.getClient();
+            client.setObjectAcl(container, object, versionId, srcClient.getObjectAcl(container, object));
+            ObjectMetadata metadata = srcClient.getObjectMetadata(new GetObjectMetadataRequest(container, object, versionId));
+           
+    		PutObjectRequest request = new PutObjectRequest(container, object, data, metadata);
+    		request.getRequestClientOptions().setReadLimit(15728640); //15MB
+        	client.putObject(request);       
+        } catch (Exception e) {
+            throw new StorageException(e);
+        }
+    }
+    
+    public String listVersions(String bucketName, String marker , Map<String, String> objs, int num){
+    	try {
+    		 //HashMap<String,Long> objs = new  HashMap<String, Long>();
+    		VersionListing vl = client.listVersions(bucketName, null, marker, null, null, num);
+    		 
+    		 marker = vl.getNextKeyMarker();
+    		 List<S3VersionSummary> vs= vl.getVersionSummaries();
+    		 for (S3VersionSummary iter : vs) {
+    			 objs.put(iter.getKey(), iter.getVersionId());
+				;
 			}
    		 	//client.listObjects(bucketName);
     		 return marker;
