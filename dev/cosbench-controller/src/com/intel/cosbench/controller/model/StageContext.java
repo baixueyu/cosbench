@@ -47,7 +47,7 @@ public class StageContext implements StageInfo {
 
     private transient List<StageListener> listeners = new ArrayList<StageListener>();
 
-    private List<Map<String, Long>> objsList =  new ArrayList<Map<String,Long>>();
+    private List<Map<String, String>> objsList =  new ArrayList<Map<String,String>>();
     
     public StageContext() {
         /* empty */
@@ -224,14 +224,12 @@ public class StageContext implements StageInfo {
 		return snapshotRegistry;
 	}
 
-	public List<Map<String, Long>> getObjsList() {
+	public List<Map<String, String>> getObjsList() {
 		return objsList;
 	}
 
-	public void setObjsList(List<Map<String, Long>> objsList) {
+	public void setObjsList(List<Map<String, String>> objsList) {
 		this.objsList = objsList;
 	}
-	
-	
 
 }

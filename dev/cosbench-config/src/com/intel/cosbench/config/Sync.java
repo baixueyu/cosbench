@@ -7,7 +7,7 @@ public class Sync {
 	private Storage storage;    
     private String srcBucketName;
     private String destBucketName;
-    private Map<String,Long> objs;
+    private Map<String,String> objs;
     
 	public Storage getSyncStorage() {
 		return storage;
@@ -27,11 +27,12 @@ public class Sync {
 	public void setDestBucketName(String destBucketName) {
 		this.destBucketName = destBucketName;
 	}
-	public Map<String, Long> getObjs() {
+	public Map<String, String> getObjs() {
 		return objs;
 	}
-	public void setObjs(Map<String, Long> objs) {
+	public void setObjs(Map<String, String> objs) {
 		this.objs = objs;
 	}
+
 	
 }

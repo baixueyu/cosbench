@@ -94,6 +94,11 @@ public class NoneStorage implements StorageAPI {
     }
     
     @Override
+    public InputStream getObject(String container, String object, String versionId, List<Long> size, Config config) {
+    	return new ByteArrayInputStream(new byte[] {});
+    }
+    
+    @Override
     public InputStream getList(String container, String object, Config config) {
     	if (logging)
             logger.info("performing LIST at /{}/{}", container, object);
@@ -104,6 +109,11 @@ public class NoneStorage implements StorageAPI {
     public void createContainer(String container, Config config) {
         if (logging)
             logger.info("performing PUT at /{}", container);
+    }
+    
+    @Override
+    public void createContainer(String container, StorageAPI  srcS3Storage, Config config) {
+    	
     }
 
     @Deprecated
@@ -137,6 +147,11 @@ public class NoneStorage implements StorageAPI {
             long length, Config config) {
     	 if (logging)
              logger.info("performing Sync at /{}/{}", container, object);
+    }
+    @Override
+    public void syncObject(String container, String srcContainer, String object, InputStream data,
+            String versionId, StorageAPI  srcS3Storage, Config config) {
+    	
     }
 
     protected void createMetadata(String container, String object,

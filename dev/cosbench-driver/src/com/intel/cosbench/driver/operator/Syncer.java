@@ -84,12 +84,12 @@ public class Syncer extends AbstractOperator {
 
 	@Override
     protected void operate(int idx, int all, Session session) {
-    	Map<String, Long> syncObjs = session.getWorkContext().getMission().getObjs();
+    	Map<String, String> syncObjs = session.getWorkContext().getMission().getObjs();
     	String srcBucketName = session.getWorkContext().getMission().getSrcBucketName();
     	String destBucketName = session.getWorkContext().getMission().getDestBucketName();
     	//TODO destBucketName exist?  begin
     	try {
-    		session.getWorkContext().getDestStorageApi().createContainer(destBucketName, config);
+    		session.getWorkContext().getDestStorageApi().createContainer(destBucketName, session.getApi(), config);
     	} catch (Exception e) {
         	isUnauthorizedException(e, session);
         	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);      
@@ -97,8 +97,8 @@ public class Syncer extends AbstractOperator {
     	//TODO destBucketName exist? end
     	for (String key : syncObjs.keySet()) {
     		String objectName = key;
-    		long objSize = syncObjs.get(key);
-    		Sample sample = doSyncData(srcBucketName, destBucketName, objectName, objSize, config, session, this);
+    		String versionId = syncObjs.get(key);
+    		Sample sample = doSyncData(srcBucketName, destBucketName, objectName, versionId, config, session, this);
     		//TODO do sync metadata begin
     		doSyncMetaData(srcBucketName, destBucketName, objectName, config, session, this);
     		//TODO do sync metadata end
@@ -123,13 +123,14 @@ public class Syncer extends AbstractOperator {
     	//TODO sync user metadata end
 	}
 
-	public static  Sample doSyncData(String srcBucketName, String destBucketName, String objectName, long objSize, Config config, Session session, Operator op) {
+	public static  Sample doSyncData(String srcBucketName, String destBucketName, String objectName, String versionId, Config config, Session session, Operator op) {
         if (Thread.interrupted())
             throw new AbortedException();
         //TODO Get object begin 
         InputStream in = null;
+        List<Long> objSize = new ArrayList<Long>(1);
         try {
-        	in = session.getApi().getObject(srcBucketName, objectName, config);
+        	in = session.getApi().getObject(srcBucketName, objectName, versionId, objSize, config);
         } catch (StorageInterruptedException sie) {
             doLogErr(session.getLogger(), sie.getMessage(), sie);
             throw new AbortedException();
@@ -145,7 +146,7 @@ public class Syncer extends AbstractOperator {
         //TODO send object begin
         long start = System.nanoTime();
         try {
-        	session.getWorkContext().getDestStorageApi().syncObject(destBucketName, objectName, in, objSize, config);
+        	session.getWorkContext().getDestStorageApi().syncObject(destBucketName,srcBucketName, objectName, in, versionId, session.getApi(), config);
         } catch (StorageInterruptedException sie) {
             doLogErr(session.getLogger(), sie.getMessage(), sie);
             throw new AbortedException();
@@ -163,6 +164,6 @@ public class Syncer extends AbstractOperator {
         
         long end = System.nanoTime();
 		return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(),
-				op.getName(), true, (end - start) / 1000000, (end - start) / 1000000, objSize);
+				op.getName(), true, (end - start) / 1000000, (end - start) / 1000000, objSize.get(0));
     }
 }

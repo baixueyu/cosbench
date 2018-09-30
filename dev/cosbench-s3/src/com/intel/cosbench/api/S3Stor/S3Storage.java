@@ -28,6 +28,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
+import com.amazonaws.services.s3.model.AccessControlList;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.GetObjectMetadataRequest;
@@ -139,12 +140,14 @@ public class S3Storage extends NoneStorage {
         return stream;
     }
 	
-	  public InputStream getObject(String container, String object, String versionId, Config config) {
+	@Override
+	public InputStream getObject(String container, String object, String versionId, List<Long> size, Config config) {
 	        super.getObject(container, object, config);
 	        InputStream stream;
 	        try {
 	        	
 	            S3Object s3Obj = client.getObject(new GetObjectRequest(container, object, versionId));
+	            size.add(s3Obj.getObjectMetadata().getContentLength());
 	            stream = s3Obj.getObjectContent();
 	            
 	        } catch (Exception e) {
@@ -165,7 +168,7 @@ public class S3Storage extends NoneStorage {
             throw new StorageException(e);
         }
     }
-    
+    @Override
     public void createContainer(String container, StorageAPI  srcS3Storage, Config config) {
         
         try {
@@ -291,18 +294,21 @@ public class S3Storage extends NoneStorage {
     }
     
    
-    public void syncObject(String container, String object, InputStream data,
+    public void syncObject(String container, String srcContainer, String object, InputStream data,
             String versionId, StorageAPI  srcS3Storage, Config config) {    	
         //super.createObject(container, object, data, length, config);
         try {
         	S3Storage s3 = (S3Storage) srcS3Storage;
             AmazonS3 srcClient = s3.getClient();
-            client.setObjectAcl(container, object, versionId, srcClient.getObjectAcl(container, object));
-            ObjectMetadata metadata = srcClient.getObjectMetadata(new GetObjectMetadataRequest(container, object, versionId));
+            //srcClient.getObjectAcl(srcContainer, object);
+            ObjectMetadata metadata = srcClient.getObjectMetadata(new GetObjectMetadataRequest(srcContainer, object, versionId));
            
     		PutObjectRequest request = new PutObjectRequest(container, object, data, metadata);
     		request.getRequestClientOptions().setReadLimit(15728640); //15MB
-        	client.putObject(request);       
+        	client.putObject(request);    
+        	AccessControlList acl = srcClient.getObjectAcl(srcContainer, object);
+        	client.setObjectAcl(container, object, versionId, acl);
+            
         } catch (Exception e) {
             throw new StorageException(e);
         }

@@ -199,7 +199,7 @@ class MissionHandler {
         if (getType() != null &&  getType().equals("sync")) {
         	//TODO for sync operator set object_list to registry, divide equally
         	boolean isEmpty = false;
-        	Map<String, Long> objs = mission.getObjs();
+        	Map<String, String> objs = mission.getObjs();
         	if (objs == null || objs.size() == 0) {
         		isEmpty = true;
         	}
@@ -222,7 +222,7 @@ class MissionHandler {
             int yu = objSize % listSize;      
             for (int i = 0; i <= count && !isEmpty; i++) {  
             	Mission taskMission = new Mission(mission);
-            	Map<String, Long> syncObjs = new HashMap<String, Long>();  
+            	Map<String, String> syncObjs = new HashMap<String, String>();  
                 if (i == count) {   
                 	int sub = i * listSize;
                 	Iterator<String> iter = objs.keySet().iterator();

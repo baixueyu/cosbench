@@ -282,14 +282,14 @@ class WorkloadProcessor {
 	}
 
 	private String setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, String marker, Work work, StageContext stageContext, int syncNum){
-		 List<Map<String, Long>> objsList = new ArrayList<Map<String,Long>>(); 
+		 List<Map<String, String>> objsList = new ArrayList<Map<String,String>>(); 
 		 int drivers = controllerContext.getDriverCount();
 		 S3Storage s3Storage = new S3Storage();
 		 s3Storage.init(srcStorageConfig, LOGGER);
 		 //String nextMarker;
 		 for (int i=0; i<drivers; i++){
-			 Map<String, Long> objs = new HashMap<String, Long>();
-			 marker = s3Storage.listObjects(srcBucket, marker, objs, syncNum);
+			 Map<String, String> objs = new HashMap<String, String>();
+			 marker = s3Storage.listVersions(srcBucket, marker, objs, syncNum);
 			 objsList.add(objs);
 			 //解决循环list不能停止在问题
 			 if (marker == null || marker.length() <= 0) {

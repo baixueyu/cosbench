@@ -18,6 +18,7 @@ limitations under the License.
 package com.intel.cosbench.api.storage;
 
 import java.io.InputStream;
+import java.util.List;
 
 import com.intel.cosbench.api.context.*;
 import com.intel.cosbench.config.Config;
@@ -88,7 +89,7 @@ public interface StorageAPI {
      *            - the configuration used for this operation.
      */
     public InputStream getObject(String container, String object, Config config);
-
+    public InputStream getObject(String container, String object, String versionId, List<Long> size, Config config);
     /**
      * Gets a list of containers/objects
      * 
@@ -110,7 +111,8 @@ public interface StorageAPI {
      *            - the configuration used for this operation.
      */
     public void createContainer(String container, Config config);
-
+    
+    public void createContainer(String container, StorageAPI  srcS3Storage, Config config);
     /**
      * Uploads an object into a given container.
      * 
@@ -178,5 +180,7 @@ public interface StorageAPI {
      */
 	public void syncObject(String destBucketName, String objectName,
 			InputStream in, long objSize, Config config);
+	public void syncObject(String container, String srcContainer, String object, InputStream data,
+            String versionId, StorageAPI  srcS3Storage, Config config);
 
 }
