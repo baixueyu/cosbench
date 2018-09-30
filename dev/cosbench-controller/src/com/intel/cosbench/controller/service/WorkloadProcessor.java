@@ -291,6 +291,10 @@ class WorkloadProcessor {
 			 Map<String, Long> objs = new HashMap<String, Long>();
 			 marker = s3Storage.listObjects(srcBucket, marker, objs, syncNum);
 			 objsList.add(objs);
+			 //解决循环list不能停止在问题
+			 if (marker == null || marker.length() <= 0) {
+				 break;
+			 }
 		 }
 		 
 		 //TODO just for test begin

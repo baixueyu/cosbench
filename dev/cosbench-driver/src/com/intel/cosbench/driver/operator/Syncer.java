@@ -98,8 +98,10 @@ public class Syncer extends AbstractOperator {
     	for (String key : syncObjs.keySet()) {
     		String objectName = key;
     		long objSize = syncObjs.get(key);
-    		Sample sample = doSync(srcBucketName, destBucketName, objectName, objSize, config, session, this);
-    		//TODO need to know begin
+    		Sample sample = doSyncData(srcBucketName, destBucketName, objectName, objSize, config, session, this);
+    		//TODO do sync metadata begin
+    		doSyncMetaData(srcBucketName, destBucketName, objectName, config, session, this);
+    		//TODO do sync metadata end
     		session.getListener().onSampleCreated(sample);
             Date now = sample.getTimestamp();
     		Result result = new Result(now, getId(), getOpType(), getSampleType(),
@@ -110,7 +112,18 @@ public class Syncer extends AbstractOperator {
       	
     }
     
-    public static  Sample doSync(String srcBucketName, String destBucketName, String objectName, long objSize, Config config, Session session, Operator op) {
+    private void doSyncMetaData(String srcBucketName, String destBucketName,
+			String objectName, Config config, Session session,
+			Syncer syncer) {
+		// TODO Auto-generated method stub
+    	//TODO sync ACL begin
+    	//TODO sync ACL end
+    	
+    	//TODO sync user metadata begin 
+    	//TODO sync user metadata end
+	}
+
+	public static  Sample doSyncData(String srcBucketName, String destBucketName, String objectName, long objSize, Config config, Session session, Operator op) {
         if (Thread.interrupted())
             throw new AbortedException();
         //TODO Get object begin 

@@ -199,9 +199,14 @@ class StageRunner implements StageCallable {
         if (stageContext.getStage().getName().equals("sync")) {
         	List<Map<String, Long>> objList = stageContext.getObjsList();
             int i = 0;
+            int size = objList.size();
             for (TaskContext task : tasks) {
     			task.getSchedule().getWork().getSync().setObjs(objList.get(i));
     			i++;
+    			//the problem of null point
+    			if (i == size) {
+    				break;
+    			}
     		}
         }
         

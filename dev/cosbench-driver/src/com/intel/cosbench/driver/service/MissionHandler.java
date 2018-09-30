@@ -198,14 +198,21 @@ class MissionHandler {
         int offset = mission.getOffset();
         if (getType() != null &&  getType().equals("sync")) {
         	//TODO for sync operator set object_list to registry, divide equally
+        	boolean isEmpty = false;
         	Map<String, Long> objs = mission.getObjs();
+        	if (objs == null || objs.size() == 0) {
+        		isEmpty = true;
+        	}
         	//TODO just for test
         	//Map<String, Long> objs = new HashMap<String, Long>();
         	//objs.put("obj1", (long) 111);
         	//objs.put("obj2", (long) 222);
         	//objs.put("obj3", (long) 333);
         	//objs.put("obj4", (long) 444);
-        	int objSize = objs.size();        	
+        	int objSize = 0;
+        	if (!isEmpty) {
+        		objSize = objs.size();   
+        	}       	     	
         	int listSize  = objSize / workers;
         	//every workers can deal one objs sync
         	if (objSize <= workers) {
@@ -213,7 +220,7 @@ class MissionHandler {
         	}     	
         	int count = objSize / listSize;   
             int yu = objSize % listSize;      
-            for (int i = 0; i <= count; i++) {  
+            for (int i = 0; i <= count && !isEmpty; i++) {  
             	Mission taskMission = new Mission(mission);
             	Map<String, Long> syncObjs = new HashMap<String, Long>();  
                 if (i == count) {   
