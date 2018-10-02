@@ -17,6 +17,7 @@ import static com.intel.cosbench.client.S3Stor.S3Constants.PROXY_PORT_KEY;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,7 @@ import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.AccessControlList;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.BucketVersioningConfiguration;
 import com.amazonaws.services.s3.model.GetObjectMetadataRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ListBucketsRequest;
@@ -41,6 +43,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.S3VersionSummary;
+import com.amazonaws.services.s3.model.SetBucketVersioningConfigurationRequest;
 import com.amazonaws.services.s3.model.VersionListing;
 import com.amazonaws.services.s3.internal.SkipMd5CheckStrategy;
 import com.intel.cosbench.api.context.AuthContext;
@@ -169,18 +172,21 @@ public class S3Storage extends NoneStorage {
         }
     }
     @Override
-    public void createContainer(String container, StorageAPI  srcS3Storage, Config config) {
-        
+    public void createContainer(String container, StorageAPI  srcS3Storage, Config config) {       
         try {
-        	if(!client.doesBucketExist(container)) {
-	        	
+        	S3Storage s3 = (S3Storage) srcS3Storage;
+            AmazonS3 srcClient = s3.getClient();
+            BucketVersioningConfiguration srcVersionConfig = srcClient.getBucketVersioningConfiguration(container);
+        	
+        	if(!client.doesBucketExist(container)) {        	
 	            client.createBucket(container);            
-	            S3Storage s3 = (S3Storage) srcS3Storage;
-	            AmazonS3 srcClient = s3.getClient();	            
+	            //TODO ACL should be considerd
+	            //S3Storage s3 = (S3Storage) srcS3Storage;
+	            //AmazonS3 srcClient = s3.getClient();	            
 	            //srcClient.getBucketAcl(container);
-	            client.setBucketAcl(container, srcClient.getBucketAcl(container));
-	           
+	            //client.setBucketAcl(container, srcClient.getBucketAcl(container));	           
         	}
+        	client.setBucketVersioningConfiguration(new SetBucketVersioningConfigurationRequest(container, srcVersionConfig));        	
         } catch (Exception e) {
             throw new StorageException(e);
         }
@@ -193,8 +199,7 @@ public class S3Storage extends NoneStorage {
         try {
     		ObjectMetadata metadata = new ObjectMetadata();
     		metadata.setContentLength(length);
-    		metadata.setContentType("application/octet-stream");
-    		
+    		metadata.setContentType("application/octet-stream");   		
         	client.putObject(container, object, data, metadata);
         } catch (Exception e) {
             throw new StorageException(e);
@@ -301,32 +306,44 @@ public class S3Storage extends NoneStorage {
         	S3Storage s3 = (S3Storage) srcS3Storage;
             AmazonS3 srcClient = s3.getClient();
             //srcClient.getObjectAcl(srcContainer, object);
-            ObjectMetadata metadata = srcClient.getObjectMetadata(new GetObjectMetadataRequest(srcContainer, object, versionId));
-           
+            ObjectMetadata metadata = srcClient.getObjectMetadata(new GetObjectMetadataRequest(srcContainer, object, versionId));           
     		PutObjectRequest request = new PutObjectRequest(container, object, data, metadata);
     		request.getRequestClientOptions().setReadLimit(15728640); //15MB
         	client.putObject(request);    
-        	AccessControlList acl = srcClient.getObjectAcl(srcContainer, object);
-        	client.setObjectAcl(container, object, versionId, acl);
-            
+        	//TODO ACL need to consider
+        	//AccessControlList acl = srcClient.getObjectAcl(srcContainer, object);
+        	//client.setObjectAcl(container, object, versionId, acl);            
         } catch (Exception e) {
             throw new StorageException(e);
         }
     }
     
-    public String listVersions(String bucketName, String marker , Map<String, String> objs, int num){
+    public void listVersions(String bucketName, Map<String, String> marker, Map<String, String> objs, int num){
     	try {
     		 //HashMap<String,Long> objs = new  HashMap<String, Long>();
-    		VersionListing vl = client.listVersions(bucketName, null, marker, null, null, num);
-    		 
-    		 marker = vl.getNextKeyMarker();
-    		 List<S3VersionSummary> vs= vl.getVersionSummaries();
-    		 for (S3VersionSummary iter : vs) {
-    			 objs.put(iter.getKey(), iter.getVersionId());
-				;
+    		String versionIdMarker = null;
+    		String keyMarker = null;  
+    		//遍历删除，只保留一个
+    		Iterator<Map.Entry<String, String>> it = marker.entrySet().iterator();
+    		while(it.hasNext()){
+    			Map.Entry<String, String> entry = it.next();
+				keyMarker = entry.getKey();
+				versionIdMarker = entry.getValue();
+    			it.remove();    			
+    		}
+    		VersionListing vl = client.listVersions(bucketName, null, keyMarker, versionIdMarker, null, num);
+    		//reset keyMarker & versionIdMarker
+    		keyMarker = vl.getNextKeyMarker();
+    		versionIdMarker = vl.getNextVersionIdMarker();
+    		if (keyMarker != null && keyMarker.length() != 0) {
+    			marker.put(keyMarker, versionIdMarker);
+    		}
+    		//Get the result obj
+    		List<S3VersionSummary> vs = vl.getVersionSummaries();
+    		for (S3VersionSummary iter : vs) {
+    			objs.put(iter.getKey(), iter.getVersionId());
 			}
    		 	//client.listObjects(bucketName);
-    		 return marker;
         } catch (Exception e) {
             throw new StorageException(e);
         }

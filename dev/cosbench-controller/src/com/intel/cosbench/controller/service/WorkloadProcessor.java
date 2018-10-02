@@ -213,32 +213,42 @@ class WorkloadProcessor {
                    	 		destBucket = srcBucket;
                    	 	}
                    		
-                   		String nextMarker = new String();
+                   		Map<String, String> nextMarker = new HashMap<String, String>(1);
                    	 	while (true) {                    	
                        	 	Config config = getSrcStorageConfig(storageConfig);
-                       	 	nextMarker = setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext, syncNum);         
+                       	 	setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext, syncNum);         
                 			runStage(stageContext);
-                			if(nextMarker == null || nextMarker.length() <= 0) {
-                				break;
-                			}   
+                       		String key = null;
+            				String versionIdMarker = null;
+                			for (String keyMarker : nextMarker.keySet()) {
+                				key = keyMarker;
+        						versionIdMarker = nextMarker.get(keyMarker);
+        					}
+    						if ((key == null || key.length() <= 0) && (versionIdMarker == null || versionIdMarker.length() <= 0)) {
+    							break;
+    						}
                    	 	}                  
             		} else if (syncConfig.get("sync_type").equals("user")) {
             			Config config = getSrcStorageConfig(storageConfig);
             			buckets = getSrcBuckets(config);   
-            			String nextMarker = new String();
-            			while (true) {               			        				
-            				for (String bucketName : buckets) {
-            					srcBucket = destBucket = bucketName;
-            					while (true) {                    	
-                               	 	config = getSrcStorageConfig(storageConfig);
-                               	 	nextMarker = setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext, syncNum);         
-                        			runStage(stageContext);
-                        			if(nextMarker == null || nextMarker.length() <= 0) {
-                        				break;
-                        			}   
-                           	 	}
-            				}           
-            			}           			         			     	               	 	               	
+            			Map<String, String> nextMarker = new HashMap<String, String>(1);             			        				
+            			for (String bucketName : buckets) {
+            				srcBucket = destBucket = bucketName;
+            				while (true) {                    	
+            					config = getSrcStorageConfig(storageConfig);
+            					setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext, syncNum);         
+            					runStage(stageContext);
+                				String key = null;
+                				String versionIdMarker = null;
+            					for (String keyMarker : nextMarker.keySet()) {
+            						versionIdMarker = nextMarker.get(keyMarker);
+            						key = keyMarker;
+            					}
+        						if ((key == null || key.length() <= 0) && (versionIdMarker == null || versionIdMarker.length() <= 0)) {
+        							break;
+        						}
+            				}
+            			}                      			         			     	               	 	               	
                 	}
             	}
             	iter.remove();
@@ -281,7 +291,7 @@ class WorkloadProcessor {
 		return s3Storage.listBuckets();
 	}
 
-	private String setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, String marker, Work work, StageContext stageContext, int syncNum){
+	private void setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, Map<String, String> marker, Work work, StageContext stageContext, int syncNum){
 		 List<Map<String, String>> objsList = new ArrayList<Map<String,String>>(); 
 		 int drivers = controllerContext.getDriverCount();
 		 S3Storage s3Storage = new S3Storage();
@@ -289,12 +299,17 @@ class WorkloadProcessor {
 		 //String nextMarker;
 		 for (int i=0; i<drivers; i++){
 			 Map<String, String> objs = new HashMap<String, String>();
-			 marker = s3Storage.listVersions(srcBucket, marker, objs, syncNum);
+			 s3Storage.listVersions(srcBucket, marker, objs, syncNum);
 			 objsList.add(objs);
 			 //解决循环list不能停止在问题
-			 if (marker == null || marker.length() <= 0) {
-				 break;
+			 for(String keyMarker : marker.keySet()) {
+				 String versionIdMarker = marker.get(keyMarker);
+				 if ((keyMarker == null || keyMarker.length() <= 0) && (versionIdMarker == null || versionIdMarker.length() <= 0)) {
+					 break;
+				 }
+				 marker.put(keyMarker, versionIdMarker);
 			 }
+			
 		 }
 		 
 		 //TODO just for test begin
@@ -308,8 +323,6 @@ class WorkloadProcessor {
 		 stageContext.setObjsList(objsList);
          work.getSync().setSrcBucketName(srcBucket);
          work.getSync().setDestBucketName(destBucket);
-         
-         return marker;
    }
 
     private static String millisToHMS(long millis) {
