@@ -112,7 +112,7 @@ public class NoneStorage implements StorageAPI {
     }
     
     @Override
-    public void createContainer(String container, StorageAPI  srcS3Storage, Config config) {
+    public void createContainer(String container, String srcContainer, StorageAPI  srcS3Storage, Config config) {
     	
     }
 

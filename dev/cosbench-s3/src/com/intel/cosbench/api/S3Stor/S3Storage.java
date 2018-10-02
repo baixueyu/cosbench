@@ -172,11 +172,11 @@ public class S3Storage extends NoneStorage {
         }
     }
     @Override
-    public void createContainer(String container, StorageAPI  srcS3Storage, Config config) {       
+    public void createContainer(String container, String srcContainer, StorageAPI srcS3Storage, Config config) {       
         try {
         	S3Storage s3 = (S3Storage) srcS3Storage;
             AmazonS3 srcClient = s3.getClient();
-            BucketVersioningConfiguration srcVersionConfig = srcClient.getBucketVersioningConfiguration(container);
+            BucketVersioningConfiguration srcVersionConfig = srcClient.getBucketVersioningConfiguration(srcContainer);
         	
         	if(!client.doesBucketExist(container)) {        	
 	            client.createBucket(container);            
@@ -185,8 +185,11 @@ public class S3Storage extends NoneStorage {
 	            //AmazonS3 srcClient = s3.getClient();	            
 	            //srcClient.getBucketAcl(container);
 	            //client.setBucketAcl(container, srcClient.getBucketAcl(container));	           
+        	}       	
+        	if (srcVersionConfig.getStatus().equals("Off") && !client.getBucketVersioningConfiguration(container).getStatus().equals("Off")) { 
+        		srcVersionConfig.setStatus("Suspended");
+        		client.setBucketVersioningConfiguration(new SetBucketVersioningConfigurationRequest(container, srcVersionConfig));        	
         	}
-        	client.setBucketVersioningConfiguration(new SetBucketVersioningConfigurationRequest(container, srcVersionConfig));        	
         } catch (Exception e) {
             throw new StorageException(e);
         }

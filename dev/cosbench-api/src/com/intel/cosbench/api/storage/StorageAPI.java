@@ -112,7 +112,7 @@ public interface StorageAPI {
      */
     public void createContainer(String container, Config config);
     
-    public void createContainer(String container, StorageAPI  srcS3Storage, Config config);
+    public void createContainer(String container, String srcContainer, StorageAPI  srcS3Storage, Config config);
     /**
      * Uploads an object into a given container.
      * 

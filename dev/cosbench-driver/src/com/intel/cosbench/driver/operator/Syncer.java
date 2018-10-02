@@ -89,7 +89,7 @@ public class Syncer extends AbstractOperator {
     	String destBucketName = session.getWorkContext().getMission().getDestBucketName();
     	//TODO destBucketName exist?  begin
     	try {
-    		session.getWorkContext().getDestStorageApi().createContainer(destBucketName, session.getApi(), config);
+    		session.getWorkContext().getDestStorageApi().createContainer(destBucketName, srcBucketName, session.getApi(), config);
     	} catch (Exception e) {
         	isUnauthorizedException(e, session);
         	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);      
