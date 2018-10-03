@@ -117,8 +117,6 @@
   <div>
   	<p/>
     <p><a href="submit.html">submit new workloads</a></p>
-  	<p><a href="config.html">config workloads</a></p>
-  	<p><a href="advanced-config.html">advanced config for workloads</a></p>
   	<p/>
   </div>
   
@@ -170,7 +168,6 @@
   
   <div>
    <h3>Historical Workloads  <span class="counter state">${hInfos?size}</span></h3>
-    <p><a href="matrix.html?type=histo&ops=read&ops=write&ops=delete&metrics=rt&rthisto=_95rt&metrics=t&metrics=succ">view performance matrix</a></p>
     <table class="info-table">
       <tr>
         <th style="width:5%;"><input type="checkbox" id="AllHistory" onclick="checkAll(event,'HistoryWorkload')"></th>
@@ -200,7 +197,6 @@
     
 
     <h3>Archived Workloads  <span class="counter state">${archInfos?size}</span></h3>
-    <p><a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&metrics=rt&rthisto=_95rt&metrics=t&metrics=succ">view performance matrix</a></p>
     <p>
 	    <#if loadArch == false>
 		  <p><a href="index.html?loadArch=true">load archived workloads</a></p>
