@@ -36,7 +36,14 @@ import com.amazonaws.services.s3.model.BucketVersioningConfiguration;
 import com.amazonaws.services.s3.model.GetObjectMetadataRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ListBucketsRequest;
+import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
+import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
+import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ListPartsRequest;
+import com.amazonaws.services.s3.model.PartETag;
+import com.amazonaws.services.s3.model.PartListing;
+import com.amazonaws.services.s3.model.PartSummary;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -45,6 +52,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.S3VersionSummary;
 import com.amazonaws.services.s3.model.SetBucketVersioningConfigurationRequest;
 import com.amazonaws.services.s3.model.VersionListing;
+import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.internal.SkipMd5CheckStrategy;
 import com.intel.cosbench.api.context.AuthContext;
 import com.intel.cosbench.api.storage.NoneStorage;
@@ -352,4 +360,114 @@ public class S3Storage extends NoneStorage {
         }
     }
 
+     private static String upload_id="";
+	 //flag为true代表重传
+	 private static boolean flag=false;	 
+	 private static List<PartETag> partETags=new ArrayList<PartETag>();
+    
+    public void multipart_upload(String bucket_name, InputStream in, String key_name, long content_length){		  
+	      
+	 	upload_id=init_multipart_upload(bucket_name, key_name); 
+        
+        try{
+        	 upload_all_part(bucket_name,in,key_name,content_length);
+        	 complete_multipart_upload(bucket_name,key_name);	
+        	 in.close();
+        }
+        catch (Exception e) {              	
+        	e.printStackTrace();
+        }        
+          
+ }
+ 	 
+ public List<PartSummary> get_parts_information(String bucket_name,String key_name){
+	
+	 ListPartsRequest part_list=new ListPartsRequest(bucket_name,key_name,upload_id);
+	 PartListing list=client.listParts(part_list);
+	 List<PartSummary> parts=list.getParts();		 
+	 return parts;
+ }
+ 
+ public String init_multipart_upload(String bucket_name, String key_name){
+	 
+	if(upload_id.equals("") || upload_id.length() <= 0){
+		InitiateMultipartUploadRequest init_request = new InitiateMultipartUploadRequest(bucket_name, key_name);
+		InitiateMultipartUploadResult init_response = client.initiateMultipartUpload(init_request);
+		upload_id=init_response.getUploadId();
+	}
+	else
+		flag=true;
+	
+	System.out.println("init multipart upload...done"); 
+	
+    return upload_id;
+ }
+ 
+ public void upload_all_part(String bucket_name,InputStream in, String key_name, long content_length){
+	 	 
+	 int seq = 0;
+	 long part_size=5*1024*1024;
+	 long file_position=0;
+	 
+	 List<PartSummary> remote_parts=new ArrayList<PartSummary>();
+	
+	 if(flag){
+		 remote_parts=get_parts_information(bucket_name,key_name); 		 			 
+	 }
+	 
+	 for(;file_position<content_length;){
+		 part_size=Math.min(part_size,content_length-file_position);
+		 upload_part(bucket_name, in,key_name, part_size, seq, remote_parts);
+		 file_position+=part_size;
+		 seq+=1;
+	 }
+	 System.out.println("upload all parts...done");
+	 
+ }
+ 
+ public void upload_part(String bucket_name, InputStream in, String key_name, long part_size, int seq, List<PartSummary> remote_parts ){
+	 
+	 PartSummary remote_part=null;
+	 if(remote_parts.size()>seq){	 
+		 remote_part = remote_parts.get(seq);
+	 }
+	 else
+		 remote_part=null;	
+	 
+	 if(remote_part!=null){
+		
+		 if(remote_part.getSize()==part_size){
+			 
+			 if(remote_part.getETag().equals(partETags.get(seq).getETag())){
+				 System.out.println("size and etag match for part "+(seq+1)+":skipping");
+				 return;
+			 }
+			 else
+				 System.out.println("etag does not match");
+		 }else
+			 System.out.println("size does not match");
+	 }
+	 
+	 UploadPartRequest upload_request = new UploadPartRequest()
+	 	.withBucketName(bucket_name)
+	 	.withKey(key_name)
+	 	.withUploadId(upload_id)
+	 	.withPartNumber(seq+1)
+	 	.withInputStream(in)
+	 	.withPartSize(part_size);
+	 partETags.add(client.uploadPart(upload_request).getPartETag());
+			
+ }
+ 
+ public void complete_multipart_upload(String bucket_name, String key_name){
+	 	
+	 CompleteMultipartUploadRequest compRequest = new CompleteMultipartUploadRequest(bucket_name, key_name, upload_id, partETags);		 
+	 client.completeMultipartUpload(compRequest);	 
+	 
+	 System.out.println("complete multipart upload...done");	 
+ }
+ 
 }
+
+
+
