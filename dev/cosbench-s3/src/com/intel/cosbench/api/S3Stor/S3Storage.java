@@ -51,6 +51,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.S3VersionSummary;
 import com.amazonaws.services.s3.model.SetBucketVersioningConfigurationRequest;
+import com.amazonaws.services.s3.model.UploadPartResult;
 import com.amazonaws.services.s3.model.VersionListing;
 import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.internal.SkipMd5CheckStrategy;
@@ -101,6 +102,8 @@ public class S3Storage extends NoneStorage {
         clientConf.setSocketTimeout(timeout);
         clientConf.withUseExpectContinue(false);
         clientConf.withSignerOverride("S3SignerType");
+        clientConf.setMaxConnections(500);
+        clientConf.setMaxErrorRetry(10);
 //        clientConf.setProtocol(Protocol.HTTP);
 		if((!proxyHost.equals(""))&&(!proxyPort.equals(""))){
 			clientConf.setProxyHost(proxyHost);
@@ -233,20 +236,7 @@ public class S3Storage extends NoneStorage {
         }
     }
     
-    public void syncMultipartObject(String container, String object, InputStream data,
-            long length, Config config) {
-        try {
-        	//TODO for MultipartUpload
-    		ObjectMetadata metadata = new ObjectMetadata();
-    		metadata.setContentLength(length);
-    		metadata.setContentType("application/octet-stream");
-    		PutObjectRequest request =new PutObjectRequest(container, object, data, metadata);
-    		request.getRequestClientOptions().setReadLimit(15728640); //15MB
-        	client.putObject(request);
-        } catch (Exception e) {
-            throw new StorageException(e);
-        }
-    }
+   
 
     @Override
     public void deleteContainer(String container, Config config) {
@@ -310,24 +300,7 @@ public class S3Storage extends NoneStorage {
     }
     
    
-    public void syncObject(String container, String srcContainer, String object, InputStream data,
-            String versionId, StorageAPI  srcS3Storage, Config config) {    	
-        //super.createObject(container, object, data, length, config);
-        try {
-        	S3Storage s3 = (S3Storage) srcS3Storage;
-            AmazonS3 srcClient = s3.getClient();
-            //srcClient.getObjectAcl(srcContainer, object);
-            ObjectMetadata metadata = srcClient.getObjectMetadata(new GetObjectMetadataRequest(srcContainer, object, versionId));           
-    		PutObjectRequest request = new PutObjectRequest(container, object, data, metadata);
-    		request.getRequestClientOptions().setReadLimit(15728640); //15MB
-        	client.putObject(request);    
-        	//TODO ACL need to consider
-        	//AccessControlList acl = srcClient.getObjectAcl(srcContainer, object);
-        	//client.setObjectAcl(container, object, versionId, acl);            
-        } catch (Exception e) {
-            throw new StorageException(e);
-        }
-    }
+    
     
     public void listVersions(String bucketName, Map<String, String> marker, Map<String, String> objs, int num){
     	try {
@@ -359,113 +332,190 @@ public class S3Storage extends NoneStorage {
             throw new StorageException(e);
         }
     }
-
-     private static String upload_id="";
-	 //flag为true代表重传
-	 private static boolean flag=false;	 
-	 private static List<PartETag> partETags=new ArrayList<PartETag>();
+     
+    @Override
+    public int syncObject(String container, String srcContainer, String object, InputStream data, long content_length, List<String> upload_id, 
+    		List<Object> partETags, String versionId, StorageAPI  srcS3Storage, Config config) {    	
+        //super.createObject(container, object, data, length, config);
+    	long part_size = 15*1024*1024;
+    	int success=0;
+        try {
+        	if(content_length < part_size){
+        		S3Storage s3 = (S3Storage) srcS3Storage;
+                AmazonS3 srcClient = s3.getClient();
+                //srcClient.getObjectAcl(srcContainer, object);
+                ObjectMetadata metadata = srcClient.getObjectMetadata(new GetObjectMetadataRequest(srcContainer, object, versionId));           
+    		    PutObjectRequest request = new PutObjectRequest(container, object, data, metadata);
+    		    request.getRequestClientOptions().setReadLimit(15728640); //15MB
+        	    client.putObject(request); 
+        	    //TODO ACL need to consider
+        	    //AccessControlList acl = srcClient.getObjectAcl(srcContainer, object);
+        	    //client.setObjectAcl(container, object, versionId, acl);
+        	}
+        	else{
+        		success=syncMultipartObject(container, data, object, content_length, upload_id, partETags, part_size);	
+        	}
+        	            
+        } catch (Exception e) {
+        	success--;
+        	e.printStackTrace();
+            
+        }
+        return success;
+    }
     
-    public void multipart_upload(String bucket_name, InputStream in, String key_name, long content_length){		  
-	      
-	 	upload_id=init_multipart_upload(bucket_name, key_name); 
-        
+    /**
+     * 多片上传主函数
+     * @param bucket_name 对象要上传到的目的桶名
+     * @param in 所上传的对象的数据流
+     * @param key_name 所上传的对象名
+     * @param content_length 所上传的对象的大小
+     * @param upload_id 多片上传的标识，用于断点续传
+     * @param partETags 已成功上传的对象分片信息，用于
+     * @param part_size
+     * @return
+     */
+    public int syncMultipartObject(String bucket_name, InputStream in, String key_name, long content_length, List<String> upload_id, List<Object> partETags, long part_size){
+    	List<PartSummary> remote_parts = new ArrayList<PartSummary>();
         try{
-        	 upload_all_part(bucket_name,in,key_name,content_length);
-        	 complete_multipart_upload(bucket_name,key_name);	
-        	 in.close();
+        	if(null == upload_id || upload_id.size() <= 0){
+        		init_multipart_upload(bucket_name, key_name, upload_id);
+        	}
+        	else{
+        		remote_parts = get_parts_information(bucket_name,key_name, upload_id);       
+        	}  	
+        	upload_all_part(bucket_name, in, key_name, content_length, upload_id, remote_parts, partETags, part_size);
+        	complete_multipart_upload(bucket_name, key_name, upload_id, partETags);
         }
         catch (Exception e) {              	
         	e.printStackTrace();
-        }        
-          
- }
- 	 
- public List<PartSummary> get_parts_information(String bucket_name,String key_name){
-	
-	 ListPartsRequest part_list=new ListPartsRequest(bucket_name,key_name,upload_id);
-	 PartListing list=client.listParts(part_list);
-	 List<PartSummary> parts=list.getParts();		 
-	 return parts;
- }
+        	return -1;
+        }
+        return 0;
+    }
+ 	
+    /**
+     * 获取已成功上传至集群的分片信息
+     * @param bucket_name
+     * @param key_name
+     * @param upload_id
+     * @return
+     */
+    public List<PartSummary> get_parts_information(String bucket_name, String key_name, List<String> upload_id){
+    	ListPartsRequest part_list = new ListPartsRequest(bucket_name,key_name,upload_id.get(0));
+        PartListing list = client.listParts(part_list);
+        List<PartSummary> parts = list.getParts();	
+        System.out.println("重传，故本次不需要初始化");
+        return parts;
+    }
  
- public String init_multipart_upload(String bucket_name, String key_name){
-	 
-	if(upload_id.equals("") || upload_id.length() <= 0){
-		InitiateMultipartUploadRequest init_request = new InitiateMultipartUploadRequest(bucket_name, key_name);
-		InitiateMultipartUploadResult init_response = client.initiateMultipartUpload(init_request);
-		upload_id=init_response.getUploadId();
-	}
-	else
-		flag=true;
-	
-	System.out.println("init multipart upload...done"); 
-	
-    return upload_id;
- }
+    /**
+     * 多片上传第一阶段：初始化多片上传
+     * @param bucket_name
+     * @param key_name
+     * @param upload_id
+     * @param flag
+     * @return
+     */
+    public int init_multipart_upload(String bucket_name, String key_name, List<String> upload_id){
+    	InitiateMultipartUploadRequest init_request = new InitiateMultipartUploadRequest(bucket_name, key_name);
+        InitiateMultipartUploadResult init_response = client.initiateMultipartUpload(init_request);
+        upload_id.add(init_response.getUploadId());
+        System.out.println("init multipart ...done");
+        return 0;
+    }
  
- public void upload_all_part(String bucket_name,InputStream in, String key_name, long content_length){
-	 	 
-	 int seq = 0;
-	 long part_size=5*1024*1024;
-	 long file_position=0;
-	 
-	 List<PartSummary> remote_parts=new ArrayList<PartSummary>();
-	
-	 if(flag){
-		 remote_parts=get_parts_information(bucket_name,key_name); 		 			 
-	 }
-	 
-	 for(;file_position<content_length;){
-		 part_size=Math.min(part_size,content_length-file_position);
-		 upload_part(bucket_name, in,key_name, part_size, seq, remote_parts);
-		 file_position+=part_size;
-		 seq+=1;
-	 }
-	 System.out.println("upload all parts...done");
-	 
- }
+    /**
+     * 多片上传第二阶段：循环上传所有分片
+     * @param bucket_name
+     * @param in
+     * @param key_name
+     * @param content_length
+     * @param upload_id
+     * @param flag
+     * @param partETags
+     * @param part_size
+     * @return
+     */
+    public int upload_all_part(String bucket_name, InputStream in, String key_name, long content_length, List<String> upload_id, List<PartSummary> remote_parts, List<Object> partETags, long part_size){
+    	int seq = 0;
+        long file_position = 0;
+        for(;file_position < content_length;){
+        	part_size = Math.min(part_size, content_length - file_position);
+            upload_part(bucket_name, in, key_name, part_size, seq, remote_parts, upload_id, partETags);
+            file_position += part_size;
+            seq += 1;
+        }
+        return 0;
+    }
  
- public void upload_part(String bucket_name, InputStream in, String key_name, long part_size, int seq, List<PartSummary> remote_parts ){
-	 
-	 PartSummary remote_part=null;
-	 if(remote_parts.size()>seq){	 
-		 remote_part = remote_parts.get(seq);
-	 }
-	 else
-		 remote_part=null;	
-	 
-	 if(remote_part!=null){
-		
-		 if(remote_part.getSize()==part_size){
-			 
-			 if(remote_part.getETag().equals(partETags.get(seq).getETag())){
-				 System.out.println("size and etag match for part "+(seq+1)+":skipping");
-				 return;
-			 }
-			 else
-				 System.out.println("etag does not match");
-		 }else
-			 System.out.println("size does not match");
-	 }
-	 
-	 UploadPartRequest upload_request = new UploadPartRequest()
-	 	.withBucketName(bucket_name)
-	 	.withKey(key_name)
-	 	.withUploadId(upload_id)
-	 	.withPartNumber(seq+1)
-	 	.withInputStream(in)
-	 	.withPartSize(part_size);
-	 partETags.add(client.uploadPart(upload_request).getPartETag());
-			
- }
+    /**
+     * 上传每个分片，对于已经成功上传至集群的分片则直接跳过
+     * @param bucket_name
+     * @param in
+     * @param key_name
+     * @param part_size
+     * @param seq
+     * @param remote_parts
+     * @param upload_id
+     * @param partETags
+     * @return
+     */
+    public int upload_part(String bucket_name, InputStream in, String key_name, long part_size, int seq, List<PartSummary> remote_parts, List<String> upload_id, List<Object> partETags){	 
+        PartSummary remote_part = null;
+        if(remote_parts.size() > seq){
+        	remote_part = remote_parts.get(seq);
+        }
+        else{
+        	remote_part = null;
+        }				 
+        if(null != remote_part){
+        	if(remote_part.getSize() == part_size){
+        		PartETag partETag=(PartETag)partETags.get(seq);
+        		if(remote_part.getETag().equals(partETag.getETag())){
+        			System.out.println("size and etag match for part "+(seq+1)+":skipping");
+                    return 0;
+        		}     
+                else{
+                	System.out.println("etag does not match"); 
+                }		 		
+            }
+        	else{
+        		System.out.println("size does not match");
+        	}	
+        }
+        UploadPartRequest upload_request = new UploadPartRequest()
+                .withBucketName(bucket_name)
+                .withKey(key_name)
+                .withUploadId(upload_id.get(0))
+                .withPartNumber(seq+1)
+                .withInputStream(in)
+                .withPartSize(part_size);
+        upload_request.getRequestClientOptions().setReadLimit(15728640); //15MB
+        UploadPartResult upload_response=client.uploadPart(upload_request);
+        partETags.add(upload_response.getPartETag());
+        System.out.println(key_name+"第"+(seq+1)+"片上传成功");
+        return 0;
+    }
  
- public void complete_multipart_upload(String bucket_name, String key_name){
-	 	
-	 CompleteMultipartUploadRequest compRequest = new CompleteMultipartUploadRequest(bucket_name, key_name, upload_id, partETags);		 
-	 client.completeMultipartUpload(compRequest);	 
-	 
-	 System.out.println("complete multipart upload...done");	 
- }
+    /**
+     * 多片上传第三阶段：完成分片上传
+     * @param bucket_name
+     * @param key_name
+     * @param upload_id
+     * @param partETags
+     * @return
+     */
+    public int complete_multipart_upload(String bucket_name, String key_name, List<String> upload_id, List<Object> partETags){
+    	List<PartETag> partETags_correct=new ArrayList<PartETag>();
+    	for(int i=0;i<partETags.size();i++){
+    		partETags_correct.add((PartETag) partETags.get(i));
+    	}
+    	CompleteMultipartUploadRequest compRequest = new CompleteMultipartUploadRequest(bucket_name, key_name, upload_id.get(0), partETags_correct);		 
+        client.completeMultipartUpload(compRequest);
+        System.out.println("complete multipart upload...done");
+        return 0;
+    }
  
 }
 
