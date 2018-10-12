@@ -124,11 +124,14 @@ public class Syncer extends AbstractOperator {
 	}
 
 	public static  Sample doSyncData(String srcBucketName, String destBucketName, String objectName, String versionId, Config config, Session session, Operator op) {
-        if (Thread.interrupted())
+       
+		
+		if (Thread.interrupted())
             throw new AbortedException();
         //TODO Get object begin 
         InputStream in = null;
         List<Long> objSize = new ArrayList<Long>(1);
+        
         try {
         	in = session.getApi().getObject(srcBucketName, objectName, versionId, objSize, config);
         } catch (StorageInterruptedException sie) {
@@ -139,14 +142,30 @@ public class Syncer extends AbstractOperator {
         	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);
         	
 			return new Sample(new Date(), op.getId(), op.getOpType(),
-					op.getSampleType(), op.getName(), false);
-			
+					op.getSampleType(), op.getName(), false);		
         } 
         //TODO Get object end
+        
         //TODO send object begin
         long start = System.nanoTime();
         try {
-        	session.getWorkContext().getDestStorageApi().syncObject(destBucketName,srcBucketName, objectName, in, versionId, session.getApi(), config);
+        	List<String> upload_id = new ArrayList<String>(1); 
+            List<Object> partETags = new ArrayList<Object>();
+        	int i = 0;
+        	do{
+        		int result = session.getWorkContext().getDestStorageApi().syncObject(destBucketName,srcBucketName, objectName, in, objSize.get(0), upload_id, partETags, versionId, session.getApi(), config);
+        	    System.out.println(objectName+"已上传"+(i+1)+"次");
+        		if(result == 0){
+        			System.out.println(objectName+"第"+(i+1)+"次上传后成功");
+        	    	break;
+        	    }
+        	    else{
+        	    	IOUtils.closeQuietly(in);
+        		    in = session.getApi().getObject(srcBucketName, objectName, versionId, objSize, config);
+        		    i++;
+        		    System.out.println(objectName+"第"+i+"次上传后失败");
+        	    }		
+        	}while(i<5);
         } catch (StorageInterruptedException sie) {
             doLogErr(session.getLogger(), sie.getMessage(), sie);
             throw new AbortedException();

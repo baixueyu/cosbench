@@ -149,11 +149,12 @@ public class NoneStorage implements StorageAPI {
              logger.info("performing Sync at /{}/{}", container, object);
     }
     @Override
-    public void syncObject(String container, String srcContainer, String object, InputStream data,
-            String versionId, StorageAPI  srcS3Storage, Config config) {
-    	
+    public int syncObject(String container, String srcContainer, String object, InputStream data, long content_length, List<String> upload_id,
+    		List<Object> partETags, String versionId, StorageAPI  srcS3Storage, Config config) {
+    	return 0;
     }
-
+    
+   
     protected void createMetadata(String container, String object,
             Map<String, String> map, Config config) {
         if (logging)

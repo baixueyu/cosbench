@@ -102,8 +102,8 @@ public class S3Storage extends NoneStorage {
         clientConf.setSocketTimeout(timeout);
         clientConf.withUseExpectContinue(false);
         clientConf.withSignerOverride("S3SignerType");
-        clientConf.setMaxConnections(500);
-        clientConf.setMaxErrorRetry(10);
+        clientConf.setMaxConnections(1000);
+        clientConf.setMaxErrorRetry(100);
 //        clientConf.setProtocol(Protocol.HTTP);
 		if((!proxyHost.equals(""))&&(!proxyPort.equals(""))){
 			clientConf.setProxyHost(proxyHost);
