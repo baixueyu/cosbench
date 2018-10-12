@@ -24,5 +24,12 @@
 	<classpathentry kind="lib" path="aws-java-sdk-s3-1.10.76.jar"/>
 	<classpathentry kind="lib" path="httpclient-4.3.6.jar"/>
 	<classpathentry kind="lib" path="httpcore-4.3.3.jar"/>
+	<classpathentry kind="lib" path="guava-18.0.jar" sourcepath="C:/Users/yangfuqiang/Downloads/guava-18.0-sources.jar">
+		<attributes>
+			<attribute name="source_encoding" value="UTF-8"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="jedis-2.0.0.jar"/>
+	<classpathentry kind="lib" path="commons-pool-1.6.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
