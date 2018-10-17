@@ -40,7 +40,8 @@ public class RateLimiter {
 	}
 
 	public Long getNow() {
-		return System.currentTimeMillis();
+		this.now = System.currentTimeMillis();
+		return now;
 	}
 
 	public Jedis getJedis() {
@@ -49,8 +50,8 @@ public class RateLimiter {
 
 	private RedisPermits putDefaultPermits() {
 		permits = new RedisPermits(permitsPerSecond, maxBurstSeconds);
-
-		this.jedis.set(key, permits.toString());
+		String json = RedisUtil.toJson(permits);
+		this.jedis.set(key, json);
 		return permits;
 	}
 
@@ -60,9 +61,10 @@ public class RateLimiter {
 	 * @return
 	 */
 	public RedisPermits getPermits() {
-
-		if (RedisUtil.getJedis().get(key) == null) {
-			String json = this.jedis.get(key);
+		String json;
+		if ((json = this.jedis.get(key)) != null) {
+			// json = this.jedis.get(key);
+			permits = RedisUtil.toPermits(json);
 			return permits;
 		} else {
 			return putDefaultPermits();
@@ -76,7 +78,8 @@ public class RateLimiter {
 	 * @param permits
 	 */
 	public void setPermits(RedisPermits permits) {
-		this.jedis.set(key, permits);
+		String json = RedisUtil.toJson(permits);
+		this.jedis.set(key, json);
 
 	}
 
@@ -132,6 +135,7 @@ public class RateLimiter {
 		long microsToWait;
 		synchronized (mutex()) {
 			long nowMicros = stopwatch.readMicros();
+			System.out.println(nowMicros);
 			if (!canAcquire(nowMicros, timeoutMicros)) {
 				return false;
 			} else {
@@ -147,7 +151,7 @@ public class RateLimiter {
 	}
 
 	private Long queryEarliestAvailable(Long tokens) {
-		long n = now;
+		long n = getNow();
 		RedisPermits permit = this.getPermits();
 		permit.reSync(n);
 		long storedPermitsToSpend = min(tokens, permit.storedPermits);
@@ -157,7 +161,7 @@ public class RateLimiter {
 	}
 
 	final long reserveAndGetWaitLength(int tokens, long nowMicros) {
-		long n = now;
+		long n = getNow();
 		RedisPermits permit = this.getPermits();
 		permit.reSync(n);
 		long storedPermitsToSpend = min(tokens, permit.storedPermits);

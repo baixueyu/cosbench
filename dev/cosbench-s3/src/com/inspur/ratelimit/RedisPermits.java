@@ -17,6 +17,8 @@ public class RedisPermits {
 	long intervalMillis;
 	long nextFreeTicketMillis = System.currentTimeMillis();
 
+	ObjectMapper mapper = new ObjectMapper();
+
 	public RedisPermits(double permitsPerSecond, int maxBurstSeconds) {
 		this.maxPermits = (long) (permitsPerSecond * maxBurstSeconds);
 		this.storedPermits = (long) permitsPerSecond;
@@ -98,6 +100,25 @@ public class RedisPermits {
 
 	public void setNextFreeTicketMillis(long nextFreeTicketMillis) {
 		this.nextFreeTicketMillis = nextFreeTicketMillis;
+	}
+
+	@Override
+	public String toString() {
+		try {
+			return mapper.writeValueAsString(this);
+		} catch (JsonGenerationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+
+		}
+		return null;
 	}
 
 	public static void main(String[] args) {

@@ -1,17 +1,13 @@
 package com.inspur.ratelimit;
 
 import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
-
-import redis.clients.jedis.Jedis;
 
 public class RateLimiterFactory {
 
-	private Jedis jedis = new Jedis("10.180.210.55");
-	private ReentrantLock lock = new ReentrantLock();
+	// private Jedis jedis = new Jedis("10.180.210.55");
+	// private ReentrantLock lock = new ReentrantLock();
 
-	private Map rateLimiterMap = new HashMap<String, RateLimiter>();
+	private HashMap<String, RateLimiter> rateLimiterMap = new HashMap<String, RateLimiter>();
 
 	/**
 	 * ´´½¨RateLimiter
