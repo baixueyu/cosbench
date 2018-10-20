@@ -219,10 +219,12 @@ class MissionHandler {
         		listSize = 1;
         	}     	
         	int count = objSize / listSize;   
-            int yu = objSize % listSize;      
-            for (int i = 0; i <= count && !isEmpty; i++) {  
+            int yu = objSize % listSize;   
+       
+            for (int i = 0; i <= count && !isEmpty; i++) {
+            	
             	Mission taskMission = new Mission(mission);
-            	Map<String, String> syncObjs = new HashMap<String, String>();  
+            	Map<String, String> syncObjs = new HashMap<String, String>(); 
                 if (i == count) {   
                 	int sub = i * listSize;
                 	Iterator<String> iter = objs.keySet().iterator();
@@ -258,6 +260,7 @@ class MissionHandler {
                 //mission.setSrcBucketName(msrcBucketName);
                 //mission.setDestBucketName(destBucketName);
                 registry.addWorker(createWorkerContext(i + offset + 1, taskMission));
+                
             }
         } else {
             for (int idx = 1; idx <= workers; idx++) {
@@ -265,10 +268,13 @@ class MissionHandler {
             }
         }        
         missionContext.setWorkerRegistry(registry);
+        
     }
 
     private WorkerContext createWorkerContext(int idx, Mission mission) {
-        LogManager manager = missionContext.getLogManager();
+    	
+    	
+    	LogManager manager = missionContext.getLogManager();
         WorkerContext context = new WorkerContext();
         context.setIndex(idx);
         context.setMission(mission);
@@ -403,6 +409,7 @@ class MissionHandler {
         String id = missionContext.getId();
         LOGGER.debug("begin to execute mission {}", id);
         try {
+        	Mission.setSyncObjFailCount(0);
             stressTarget();
         } catch (TimeoutException te) {
             /* no need to shutdown agents again */
@@ -447,7 +454,7 @@ class MissionHandler {
         return agents;
     }
 
-    private void executeAgents(List<Agent> agents, int timeout) {
+    private void executeAgents(List<Agent> agents, int timeout) {	
         int num = agents.size();
         LOGGER.debug("begin to execute agents, {} in total", num);
         try {

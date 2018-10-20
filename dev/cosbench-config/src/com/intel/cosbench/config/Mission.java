@@ -55,10 +55,13 @@ public class Mission implements Iterable<Operation> {
     private String srcBucketName;
     private String destBucketName;
     private Map<String, String> objs;
-    
+    private static int syncObjFailCount = 0;
+      
     public Mission() {
         /* empty */
     }
+    
+   
     public Mission(Mission m) {
     	this.name = m.name;
     	this.workers = m.workers;
@@ -78,9 +81,27 @@ public class Mission implements Iterable<Operation> {
         this.srcBucketName = m.srcBucketName;
         this.destBucketName = m.destBucketName;
         this.objs = m.objs;
+       
     }
 
-    public String getName() {
+
+	public static int getSyncObjFailCount() {
+		return syncObjFailCount;
+	}
+
+
+	public static void setSyncObjFailCount(int count) {
+		if(count == 0) {
+			Mission.syncObjFailCount = 0;
+		}
+		else{
+			Mission.syncObjFailCount = Mission.syncObjFailCount + count;
+		}
+		
+	}
+
+
+	public String getName() {
         return name;
     }
 

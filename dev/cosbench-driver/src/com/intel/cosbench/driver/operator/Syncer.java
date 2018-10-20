@@ -10,6 +10,7 @@ import com.intel.cosbench.api.storage.StorageInterruptedException;
 import com.intel.cosbench.bench.Result;
 import com.intel.cosbench.bench.Sample;
 import com.intel.cosbench.config.Config;
+import com.intel.cosbench.config.Mission;
 import com.intel.cosbench.driver.generator.RandomInputStream;
 import com.intel.cosbench.driver.generator.XferCountingInputStream;
 import com.intel.cosbench.driver.util.ObjectPicker;
@@ -42,6 +43,7 @@ public class Syncer extends AbstractOperator {
         chunked = config.getBoolean("chunked", false);
         isRandom = !config.get("content", "random").equals("zero");
         hashCheck = config.getBoolean("hashCheck", false);
+        
     }
 
     @Override
@@ -84,6 +86,8 @@ public class Syncer extends AbstractOperator {
 
 	@Override
     protected void operate(int idx, int all, Session session) {
+		
+		
     	Map<String, String> syncObjs = session.getWorkContext().getMission().getObjs();
     	String srcBucketName = session.getWorkContext().getMission().getSrcBucketName();
     	String destBucketName = session.getWorkContext().getMission().getDestBucketName();
@@ -98,18 +102,16 @@ public class Syncer extends AbstractOperator {
     	for (String key : syncObjs.keySet()) {
     		String objectName = key;
     		String versionId = syncObjs.get(key);
-    		Sample sample = doSyncData(srcBucketName, destBucketName, objectName, versionId, config, session, this);
-    		//TODO do sync metadata begin
-    		doSyncMetaData(srcBucketName, destBucketName, objectName, config, session, this);
-    		//TODO do sync metadata end
-    		session.getListener().onSampleCreated(sample);
-            Date now = sample.getTimestamp();
-    		Result result = new Result(now, getId(), getOpType(), getSampleType(),
-    				getName(), sample.isSucc());
-            session.getListener().onOperationCompleted(result);
-            //TODO need to know end
-    	}
-      	
+    			Sample sample = doSyncData(srcBucketName, destBucketName, objectName, versionId, config, session, this);
+    		    //TODO do sync metadata begin
+    		    doSyncMetaData(srcBucketName, destBucketName, objectName, config, session, this);
+    		    //TODO do sync metadata end
+    		    session.getListener().onSampleCreated(sample);
+                Date now = sample.getTimestamp();
+    		    Result result = new Result(now, getId(), getOpType(), getSampleType(), getName(), sample.isSucc());
+                session.getListener().onOperationCompleted(result);	
+              //TODO need to know end
+        	} 
     }
     
     private void doSyncMetaData(String srcBucketName, String destBucketName,
@@ -129,6 +131,8 @@ public class Syncer extends AbstractOperator {
         //TODO Get object begin 
         InputStream in = null;
         List<Long> objSize = new ArrayList<Long>(1);
+   //   int syncObjFailLimit = session.getWorkContext().getMission().getSyncObjFailLimit();
+   //   System.out.println("syncObjFailLimit:"+syncObjFailLimit);
         try {
         	in = session.getApi().getObject(srcBucketName, objectName, versionId, objSize, config);
         } catch (StorageInterruptedException sie) {
@@ -147,20 +151,30 @@ public class Syncer extends AbstractOperator {
         	List<String> upload_id = new ArrayList<String>(1); 
             List<Object> partETags = new ArrayList<Object>();
         	int i = 0;
-        	do{
+        	do {
         		int result = session.getWorkContext().getDestStorageApi().syncObject(destBucketName,srcBucketName, objectName, in, objSize.get(0), upload_id, partETags, versionId, session.getApi(), config);
-        	    System.out.println(objectName + "已上传" + (i+1) + "次");
+        	    System.out.println(objectName + "已上传" + (i + 1) + "次");
         		if (result == 0) {
-        			System.out.println(objectName + "第" + (i+1) + "次上传后成功");
-        	    	break;
+        			System.out.println(objectName + "第" + (i + 1) + "次上传后成功");
+        			doLogInfo(session.getLogger(), objectName + "第" + (i + 1) + "次上传后成功");
+            	 break;
         	    }
         	    else {
-        	    	 IOUtils.closeQuietly(in);
-        		     in = session.getApi().getObject(srcBucketName, objectName, versionId, objSize, config);
-        		     i++;
-        		     System.out.println(objectName + "第" + i + "次上传后失败");
+        	    	IOUtils.closeQuietly(in);
+        		    in = session.getApi().getObject(srcBucketName, objectName, versionId, objSize, config);
+        		    i ++;
+        		    System.out.println(objectName + "第" + i + "次上传后失败");
         	    }		
-        	}while(i < 5);
+         	} while (i < 5);
+        	if (i == 5) {
+        		Mission.setSyncObjFailCount(1);
+			//	System.out.println(Mission.getSyncObjFailCount()+"lala");	 			
+        		doLogWarn(session.getLogger(), "/" + srcBucketName + "/" + objectName + "sync failure");
+        	}
+        	if(Mission.getSyncObjFailCount() >= 100){
+        		doLogErr(session.getLogger(), "the failure gets to limit, terminate current mission");
+        		throw new AbortedException();
+        	}
         } catch (StorageInterruptedException sie) {
             doLogErr(session.getLogger(), sie.getMessage(), sie);
             throw new AbortedException();
