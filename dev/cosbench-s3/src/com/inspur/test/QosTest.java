@@ -16,8 +16,8 @@ public class QosTest {
 
 		// RateLimiter limiter = RateLimiter.create(20.0);// 每秒放置v个令脾
 		RateLimiterFactory rateLimiterFactory = new RateLimiterFactory();
-		RateLimiter limiter = rateLimiterFactory.build("ratelimiter:im:msg",
-				10.0, 30);
+		RateLimiter limiter = rateLimiterFactory.build("ratelimiter:im:msg2",
+				10., 30);
 		byte[] buff = new byte[10240];// 一次传10K
 		int count = 0;
 		Date start = new Date();
@@ -27,15 +27,15 @@ public class QosTest {
 		// System.out.println("获取令牌，消耗 = " + acquire);
 		// System.out.println("执行第" + i + "次操作");
 		try {
-			String path = "E:\\CLI命令行用户手册v3.7.1.8.docx";
+			String path = "E:\\项目\\浙江日报\\浙江日报\\CLI命令行用户手册v3.7.1.12.docx";
 			InputStream in = new FileInputStream(new File(path));
 			int len = 0;
 			while (true) {
-				if (limiter.tryAcquire(1, 2, TimeUnit.SECONDS)) {
-					if ((len = in.read(buff)) == -1) {
-						System.out.println("获取令牌，消耗 = ");
+				if (limiter.tryAcquire(20, 1, TimeUnit.SECONDS)) {
+					if ((len = in.read(buff)) == -1) {						
 						break;
 					}
+					System.out.println("获取令牌，消耗 = 20");
 					count += len;
 				}
 				// if ((len = in.read(buff)) == -1) {

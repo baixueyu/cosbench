@@ -37,6 +37,7 @@ public class RateLimiter {
 		this.maxBurstSeconds = maxBurstSeconds;
 		this.stopwatch = checkNotNull(SleepingStopwatch.createFromSystemTimer());
 		this.jedis = RedisUtil.getJedis();
+		putDefaultPermits();
 	}
 
 	public Long getNow() {
@@ -113,7 +114,7 @@ public class RateLimiter {
 	final long reserve(int permits) {
 		checkPermits(permits);
 		synchronized (mutex()) {
-			return reserveAndGetWaitLength(permits, stopwatch.readMicros());
+			return reserveAndGetWaitLength(permits);
 		}
 	}
 
@@ -130,24 +131,24 @@ public class RateLimiter {
 	}
 
 	public boolean tryAcquire(int token, long timeout, TimeUnit unit) {
-		long timeoutMicros = max(unit.toMicros(timeout), 0);
+		long timeoutMicros = max(unit.toMillis(timeout), 0);
 		checkPermits(token);
 		long microsToWait;
 		synchronized (mutex()) {
-			long nowMicros = stopwatch.readMicros();
-			System.out.println(nowMicros);
-			if (!canAcquire(nowMicros, timeoutMicros)) {
+			//long nowMicros = stopwatch.readMicros();
+			//System.out.println(nowMicros);
+			if (!canAcquire(token, timeoutMicros)) {
 				return false;
 			} else {
-				microsToWait = reserveAndGetWaitLength(token, nowMicros);
+				microsToWait = reserveAndGetWaitLength(token);
 			}
 		}
 		stopwatch.sleepMicrosUninterruptibly(microsToWait);
 		return true;
 	}
 
-	private boolean canAcquire(long nowMicros, long timeoutMicros) {
-		return queryEarliestAvailable(nowMicros) - timeoutMicros <= nowMicros;
+	private boolean canAcquire(int token, long timeoutMicros) {
+		return queryEarliestAvailable((long)token) - timeoutMicros <= 0;
 	}
 
 	private Long queryEarliestAvailable(Long tokens) {
@@ -160,7 +161,7 @@ public class RateLimiter {
 		return LongMath.checkedAdd(permit.nextFreeTicketMillis - n, waitMillis);
 	}
 
-	final long reserveAndGetWaitLength(int tokens, long nowMicros) {
+	final long reserveAndGetWaitLength(int tokens) {
 		long n = getNow();
 		RedisPermits permit = this.getPermits();
 		permit.reSync(n);

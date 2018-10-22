@@ -24,10 +24,11 @@ public class RateLimiterFactory {
 
 	public synchronized RateLimiter build(String key, Double permitsPerSecond,
 			int maxBurstSeconds) {
-		if (!rateLimiterMap.containsKey(key)) {
-			rateLimiterMap.put(key, new RateLimiter(key, permitsPerSecond,
+		//if (!rateLimiterMap.containsKey(key)) {
+		//不管是否存在，均覆盖
+		rateLimiterMap.put(key, new RateLimiter(key, permitsPerSecond,
 					maxBurstSeconds));
-		}
+		//}
 		return (RateLimiter) rateLimiterMap.get(key);
 	}
 
