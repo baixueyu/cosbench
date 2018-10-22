@@ -165,14 +165,14 @@ public class Syncer extends AbstractOperator {
         		    i ++;
         		    System.out.println(objectName + "第" + i + "次上传后失败");
         	    }		
-         	} while (i < 5);
-        	if (i == 5) {
+         	} while (i < 2);
+        	if (i == 2) {
         		Mission.setSyncObjFailCount(1);
 			//	System.out.println(Mission.getSyncObjFailCount()+"lala");	 			
-        		doLogWarn(session.getLogger(), "/" + srcBucketName + "/" + objectName + "sync failure");
+        		doLogWarn(session.getLogger(), "/" + srcBucketName + "/" + objectName + " 同步失败");
         	}
-        	if(Mission.getSyncObjFailCount() >= 100){
-        		doLogErr(session.getLogger(), "the failure gets to limit, terminate current mission");
+        	if (Mission.getSyncObjFailCount() >= 1) {
+        		doLogErr(session.getLogger(), "数据同步失败到达极限，退出本次任务");
         		throw new AbortedException();
         	}
         } catch (StorageInterruptedException sie) {

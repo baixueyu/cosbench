@@ -88,8 +88,8 @@ public class NoneStorage implements StorageAPI {
 
     @Override
     public InputStream getObject(String container, String object, Config config) {
-        if (logging)
-            logger.info("performing GET at /{}/{}", container, object);
+//        if (logging)
+//            logger.info("performing GET at /{}/{}", container, object);
         return new ByteArrayInputStream(new byte[] {});
     }
     
@@ -151,6 +151,8 @@ public class NoneStorage implements StorageAPI {
     @Override
     public int syncObject(String container, String srcContainer, String object, InputStream data, long content_length, List<String> upload_id,
     		List<Object> partETags, String versionId, StorageAPI  srcS3Storage, Config config) {
+    	if (logging)
+            logger.info("performing Sync at /{}/{}", srcContainer, object);
     	return 0;
     }
     
