@@ -2,7 +2,7 @@
 <div class="content">
   <div>
     <center>
-      <span>Intel Corporation</span>
+      <span>All Rights Reserved By Inspur</span>
     </center>
   </div>
 </div> <#-- end of content -->

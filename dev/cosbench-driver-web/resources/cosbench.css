@@ -65,9 +65,10 @@ a:visited {
 
 #version {
 	float: right;
+        font-size: 28px;
 	text-align: right;
 	position: relative;
-	top: 15px;
+	top: 20px;
 }
 
 /* ---------------------------------------
