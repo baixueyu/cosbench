@@ -35,6 +35,7 @@ public class QosTest {
 					if ((len = in.read(buff)) == -1) {						
 						break;
 					}
+					System.out.println(sdf.format(new Date()));
 					System.out.println("»ñÈ¡ÁîÅÆ£¬ÏûºÄ = 20");
 					count += len;
 				}

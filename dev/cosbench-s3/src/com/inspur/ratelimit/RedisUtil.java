@@ -10,6 +10,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 public final class RedisUtil {
 
@@ -38,6 +40,7 @@ public final class RedisUtil {
 	private static boolean TEST_ON_BORROW = true;
 
 	private static JedisPool jedisPool = null;
+	private static StringRedisTemplate redis = null;
 
 	/**
 	 * 初始化Redis连接池
@@ -45,17 +48,41 @@ public final class RedisUtil {
 	static {
 		try {
 			JedisPoolConfig config = new JedisPoolConfig();
-			config.setMaxActive(MAX_ACTIVE);
+			//config.setMaxActive(MAX_ACTIVE);
 			config.setMaxIdle(MAX_IDLE);
-			config.setMaxWait(MAX_WAIT);
+			//config.setMaxWait(MAX_WAIT);
+			config.setMaxTotal(MAX_ACTIVE);
+			config.setMaxWaitMillis(MAX_WAIT);
 			config.setTestOnBorrow(TEST_ON_BORROW);
 			jedisPool = new JedisPool(config, ADDR, PORT, TIMEOUT, AUTH);
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
+	/**
+	 * 初始化StringRedisTemplate连接池
+	 */
+	static {
+		try {
+			//实例化链接工厂
+			JedisConnectionFactory connectionFactory = new JedisConnectionFactory();
+			//设置host
+			connectionFactory.setHostName(ADDR);
+			//设置端口
+			connectionFactory.setPort(PORT);
+			//设置密码
+			connectionFactory.setPassword(AUTH);
+			//初始化connectionFactory
+			connectionFactory.afterPropertiesSet();
+			//实例化
+		    redis = new StringRedisTemplate(connectionFactory);
+			//初始化StringRedisTemplate
+			redis.afterPropertiesSet();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	/**
 	 * 获取Jedis实例
 	 * 
@@ -122,4 +149,13 @@ public final class RedisUtil {
 		}
 		return null;
 	}
+
+	public static StringRedisTemplate getRedis() {
+		return redis;
+	}
+
+	public static void setRedis(StringRedisTemplate redis) {
+		RedisUtil.redis = redis;
+	}
+	
 }

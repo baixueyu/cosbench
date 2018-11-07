@@ -24,12 +24,13 @@ public class RateLimiter {
 	private RedisPermits permits;
 	Jedis jedis;
 	private final SleepingStopwatch stopwatch;
+	private SyncLock syncLock;
 
 	RateLimiter(SleepingStopwatch stopwatch) {
 		this.stopwatch = checkNotNull(stopwatch);
 	}
 
-	public RateLimiter(String key, Double permitsPerSecond, int maxBurstSeconds) {
+	public RateLimiter(String key, Double permitsPerSecond, int maxBurstSeconds, SyncLock syncLock) {
 		super();
 
 		this.key = key;
@@ -37,6 +38,7 @@ public class RateLimiter {
 		this.maxBurstSeconds = maxBurstSeconds;
 		this.stopwatch = checkNotNull(SleepingStopwatch.createFromSystemTimer());
 		this.jedis = RedisUtil.getJedis();
+		this.syncLock = syncLock;
 		putDefaultPermits();
 	}
 
@@ -84,65 +86,52 @@ public class RateLimiter {
 
 	}
 
-	// Can't be initialized in the constructor because mocks don't call the
-	// constructor.
-	private volatile Object mutexDoNotUseDirectly;
-
-	private Object mutex() {
-		Object mutex = mutexDoNotUseDirectly;
-		if (mutex == null) {
-			synchronized (this) {
-				mutex = mutexDoNotUseDirectly;
-				if (mutex == null) {
-					mutexDoNotUseDirectly = mutex = new Object();
-				}
-			}
-		}
-		return mutex;
-	}
-
-	public double acquire() {
+	public double acquire() throws InterruptedException {
 		return acquire(1);
 	}
 
-	public double acquire(int permits) {
+	public double acquire(int permits) throws InterruptedException {
 		long microsToWait = reserve(permits);
 		stopwatch.sleepMicrosUninterruptibly(microsToWait);
 		return 1.0 * microsToWait / SECONDS.toMicros(1L);
 	}
 
-	final long reserve(int permits) {
+	final long reserve(int permits) throws InterruptedException {
 		checkPermits(permits);
-		synchronized (mutex()) {
+		try {
+			syncLock.lock();
 			return reserveAndGetWaitLength(permits);
+		} finally {
+			syncLock.unLock();
 		}
 	}
 
-	public boolean tryAcquire(long timeout, TimeUnit unit) {
+	public boolean tryAcquire(long timeout, TimeUnit unit) throws InterruptedException {
 		return tryAcquire(1, timeout, unit);
 	}
 
-	public boolean tryAcquire(int permits) {
+	public boolean tryAcquire(int permits) throws InterruptedException {
 		return tryAcquire(permits, 0, MICROSECONDS);
 	}
 
-	public boolean tryAcquire() {
+	public boolean tryAcquire() throws InterruptedException {
 		return tryAcquire(1, 0, MICROSECONDS);
 	}
 
-	public boolean tryAcquire(int token, long timeout, TimeUnit unit) {
+	public boolean tryAcquire(int token, long timeout, TimeUnit unit) throws InterruptedException {
 		long timeoutMicros = max(unit.toMillis(timeout), 0);
 		checkPermits(token);
 		long microsToWait;
-		synchronized (mutex()) {
-			//long nowMicros = stopwatch.readMicros();
-			//System.out.println(nowMicros);
-			if (!canAcquire(token, timeoutMicros)) {
-				return false;
-			} else {
-				microsToWait = reserveAndGetWaitLength(token);
-			}
-		}
+		   try {
+	            syncLock.lock();
+	            if (!canAcquire(token, timeoutMicros)) {
+	            	return false;
+	            } else {
+	            	microsToWait = reserveAndGetWaitLength(token);
+	            }
+		   } finally {
+			   syncLock.unLock();
+		   }
 		stopwatch.sleepMicrosUninterruptibly(microsToWait);
 		return true;
 	}

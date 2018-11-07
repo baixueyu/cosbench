@@ -29,7 +29,10 @@
 			<attribute name="source_encoding" value="UTF-8"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="jedis-2.0.0.jar"/>
 	<classpathentry kind="lib" path="commons-pool-1.6.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/spring-data-redis-1.6.2.RELEASE.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/spring-dao-2.0.8.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/commons-pool2-2.0.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/jedis-2.4.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
