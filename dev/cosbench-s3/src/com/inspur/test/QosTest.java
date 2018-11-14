@@ -31,6 +31,7 @@ public class QosTest {
 			InputStream in = new FileInputStream(new File(path));
 			int len = 0;
 			while (true) {
+				
 				if (limiter.tryAcquire(20, 1, TimeUnit.SECONDS)) {
 					if ((len = in.read(buff)) == -1) {						
 						break;

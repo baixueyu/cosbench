@@ -107,7 +107,7 @@ class SyncLock {
 	}
 	
 	public String getValue() {
-		this.value = Thread.currentThread().getName() + "-" + Thread.currentThread().getId();
+		this.value = "MultithreadLockValue";//Thread.currentThread().getName() + "-" + Thread.currentThread().getId();
 		return this.value;
 	}
    
