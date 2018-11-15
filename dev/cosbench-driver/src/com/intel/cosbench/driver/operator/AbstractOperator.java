@@ -140,5 +140,16 @@ abstract class AbstractOperator implements Operator {
     			ne.printStackTrace();// mask ignore
     		}
     }
+    public static void syncException(Exception e, Session session) {
+    	if(e != null && e.getMessage() != null)
+    		try{
+    			if(401 == Integer.valueOf(e.getMessage().substring(9, 12))){
+    				session.getApi().setAuthFlag(false);
+    				LOGGER.debug("catch 401 error from storage backend, set auth flag to false");
+    			}
+    		} catch(Exception ne) {
+    			LOGGER.error("Error occurred where sync object, first error msg is: " + e.getMessage() + ", and the second error msg is: " + ne.getMessage());
+    		}
+    }
 
 }

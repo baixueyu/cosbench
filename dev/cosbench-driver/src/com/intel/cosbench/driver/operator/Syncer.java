@@ -95,7 +95,7 @@ public class Syncer extends AbstractOperator {
     	try {
     		session.getWorkContext().getDestStorageApi().createContainer(destBucketName, srcBucketName, session.getApi(), config);
     	} catch (Exception e) {
-        	isUnauthorizedException(e, session);
+    		syncException(e, session);
         	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);      
         } 
     	//TODO destBucketName exist? end
@@ -143,7 +143,7 @@ public class Syncer extends AbstractOperator {
             doLogErr(session.getLogger(), sie.getMessage(), sie);
             throw new AbortedException();
         } catch (Exception e) {
-        	isUnauthorizedException(e, session);
+        	syncException(e, session);
         	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);
 			return new Sample(new Date(), op.getId(), op.getOpType(),
 					op.getSampleType(), op.getName(), false);		
@@ -182,7 +182,7 @@ public class Syncer extends AbstractOperator {
             doLogErr(session.getLogger(), sie.getMessage(), sie);
             throw new AbortedException();
         } catch (Exception e) {
-        	isUnauthorizedException(e, session);
+        	syncException(e, session);
         	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);
 			return new Sample(new Date(), op.getId(), op.getOpType(),
 					op.getSampleType(), op.getName(), false);
