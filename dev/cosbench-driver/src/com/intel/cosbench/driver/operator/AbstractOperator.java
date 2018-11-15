@@ -136,6 +136,7 @@ abstract class AbstractOperator implements Operator {
     				LOGGER.debug("catch 401 error from storage backend, set auth flag to false");
     			}
     		}catch(NumberFormatException ne) {
+    			System.out.println(e.getMessage());
     			ne.printStackTrace();// mask ignore
     		}
     }

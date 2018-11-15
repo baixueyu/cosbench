@@ -197,7 +197,7 @@ class StageRunner implements StageCallable {
         stageContext.setState(SUBMITTING);
         TaskRegistry tasks = stageContext.getTaskRegistry();
         if (stageContext.getStage().getName().equals("sync")) {
-        	List<Map<String, String>> objList = stageContext.getObjsList();
+        	List<List<String>> objList = stageContext.getObjsList();
             int i = 0;
             int size = objList.size();
             for (TaskContext task : tasks) {

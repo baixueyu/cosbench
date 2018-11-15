@@ -292,13 +292,13 @@ class WorkloadProcessor {
 	}
 
 	private void setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, Map<String, String> marker, Work work, StageContext stageContext, int syncNum){
-		 List<Map<String, String>> objsList = new ArrayList<Map<String,String>>(); 
+		 List<List<String>> objsList = new ArrayList<List<String>>(); 
 		 int drivers = controllerContext.getDriverCount();
 		 S3Storage s3Storage = new S3Storage();
 		 s3Storage.init(srcStorageConfig, LOGGER);
 		 //String nextMarker;
 		 for (int i=0; i<drivers; i++){
-			 Map<String, String> objs = new HashMap<String, String>();
+			 List<String> objs = new ArrayList<String>();
 			 s3Storage.listVersions(srcBucket, marker, objs, syncNum);
 			 objsList.add(objs);
 			 //解决循环list不能停止在问题

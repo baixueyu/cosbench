@@ -88,7 +88,7 @@ public class Syncer extends AbstractOperator {
     protected void operate(int idx, int all, Session session) {
 		
 		
-    	Map<String, String> syncObjs = session.getWorkContext().getMission().getObjs();
+    	List<String> syncObjs = session.getWorkContext().getMission().getObjs();
     	String srcBucketName = session.getWorkContext().getMission().getSrcBucketName();
     	String destBucketName = session.getWorkContext().getMission().getDestBucketName();
     	//TODO destBucketName exist?  begin
@@ -99,9 +99,13 @@ public class Syncer extends AbstractOperator {
         	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);      
         } 
     	//TODO destBucketName exist? end
-    	for (String key : syncObjs.keySet()) {
-    		String objectName = key;
-    		String versionId = syncObjs.get(key);
+    	for (String key : syncObjs) {
+    	//	String objectName = key;
+    	//	String versionId = syncObjs.get(key);
+    		int index = key.indexOf("+");
+    		String objectName = key.substring(0,index);
+    		String versionId = key.substring(index+1, key.length());
+    		System.out.println(objectName+"::"+versionId);
     			Sample sample = doSyncData(srcBucketName, destBucketName, objectName, versionId, config, session, this);
     		    //TODO do sync metadata begin
     		    doSyncMetaData(srcBucketName, destBucketName, objectName, config, session, this);
@@ -167,8 +171,7 @@ public class Syncer extends AbstractOperator {
         	    }		
          	} while (i < 5);
         	if (i == 5) {
-        		Mission.setSyncObjFailCount(1);
-			//	System.out.println(Mission.getSyncObjFailCount()+"lala");	 			
+        		Mission.setSyncObjFailCount(1); 			
         		doLogWarn(session.getLogger(), "/" + srcBucketName + "/" + objectName + " Í¬²½Ê§°Ü");
         	}
         	if (Mission.getSyncObjFailCount() >= 100) {

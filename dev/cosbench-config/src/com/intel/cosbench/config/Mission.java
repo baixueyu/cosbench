@@ -54,7 +54,7 @@ public class Mission implements Iterable<Operation> {
     private List<Operation> operations;
     private String srcBucketName;
     private String destBucketName;
-    private Map<String, String> objs;
+    private List<String> objs;
     private static int syncObjFailCount = 0;
       
     public Mission() {
@@ -287,10 +287,10 @@ public class Mission implements Iterable<Operation> {
 		this.destBucketName = destBucketName;
 	}
 
-	public Map<String, String> getObjs() {
+	public List<String> getObjs() {
 		return objs;
 	}
-	public void setObjs(Map<String, String> objs) {
+	public void setObjs(List<String> objs) {
 		this.objs = objs;
 	}
 	@Override

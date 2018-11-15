@@ -88,8 +88,8 @@ public class NoneStorage implements StorageAPI {
 
     @Override
     public InputStream getObject(String container, String object, Config config) {
-//        if (logging)
-//            logger.info("performing GET at /{}/{}", container, object);
+ //       if (logging)
+ //          logger.info("performing GET at /{}/{}", container, object);
         return new ByteArrayInputStream(new byte[] {});
     }
     
