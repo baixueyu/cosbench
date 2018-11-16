@@ -161,12 +161,11 @@ public class Syncer extends AbstractOperator {
         		if (result == 0) {
         			System.out.println(objectName + "第" + (i + 1) + "次上传后成功");
         			doLogInfo(session.getLogger(), objectName + "第" + (i + 1) + "次上传后成功");
-            	 break;
-        	    }
-        	    else {
+        			break;
+        	    } else {
         	    	IOUtils.closeQuietly(in);
         		    in = session.getApi().getObject(srcBucketName, objectName, versionId, objSize, config);
-        		    i ++;
+        		    i++;
         		    System.out.println(objectName + "第" + i + "次上传后失败");
         	    }		
          	} while (i < 5);
@@ -178,6 +177,9 @@ public class Syncer extends AbstractOperator {
         		doLogErr(session.getLogger(), "数据同步失败到达极限，退出本次任务");
         		throw new AbortedException();
         	}
+        } catch (AbortedException ae) {
+            doLogErr(session.getLogger(), ae.getMessage(), ae);
+            throw new AbortedException(); 
         } catch (StorageInterruptedException sie) {
             doLogErr(session.getLogger(), sie.getMessage(), sie);
             throw new AbortedException();

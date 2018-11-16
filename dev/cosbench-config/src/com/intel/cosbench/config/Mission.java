@@ -56,6 +56,8 @@ public class Mission implements Iterable<Operation> {
     private String destBucketName;
     private List<String> objs;
     private static int syncObjFailCount = 0;
+    private String type;
+    private String state;
       
     public Mission() {
         /* empty */
@@ -81,6 +83,7 @@ public class Mission implements Iterable<Operation> {
         this.srcBucketName = m.srcBucketName;
         this.destBucketName = m.destBucketName;
         this.objs = m.objs;
+        this.type = m.type;
        
     }
 
@@ -298,7 +301,27 @@ public class Mission implements Iterable<Operation> {
         return operations.iterator();
     }
 
-    public void validate() {
+    public String getType() {
+		return type;
+	}
+
+
+	public void setType(String type) {
+		// TODO Auto-generated method stub
+		this.type = type;
+	}
+
+	public String getState() {
+		return state;
+	}
+
+
+	public void setState(String state) {
+		this.state = state;
+	}
+
+
+	public void validate() {
         setName(getName());
         setWorkers(getWorkers());
         setTotalWorkers(getTotalWorkers());
@@ -322,5 +345,11 @@ public class Mission implements Iterable<Operation> {
         if (sum != 100)
             throw new ConfigException("op ratio should sum to 100");
     }
+
+
+
+
+
+
 
 }

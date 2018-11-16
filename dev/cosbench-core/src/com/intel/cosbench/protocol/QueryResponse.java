@@ -38,6 +38,7 @@ public class QueryResponse extends Response {
 
     private boolean running; /* is mission running */
     private List<Metrics> report; /* metrics report */
+    private String state;
 
     public QueryResponse() {
         /* empty */
@@ -90,5 +91,13 @@ public class QueryResponse extends Response {
     public void setReport(List<Metrics> report) {
         this.report = report != null? report: new ArrayList<Metrics>();
     }
+
+	public String getState() {
+		return state;
+	}
+
+	public void setState(String state) {
+		this.state = state;
+	}
 
 }

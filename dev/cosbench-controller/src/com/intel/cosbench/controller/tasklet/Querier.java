@@ -18,7 +18,7 @@ limitations under the License.
 package com.intel.cosbench.controller.tasklet;
 
 import static com.intel.cosbench.model.TaskState.FINISHED;
-
+import static com.intel.cosbench.model.TaskState.FAILED;
 import java.util.Date;
 
 import com.intel.cosbench.bench.*;
@@ -67,7 +67,9 @@ class Querier extends AbstractCommandTasklet<QueryResponse> {
     		LOGGER.warn("no response gets from driver");
     		return;
     	}
-    	
+    	if (response.getState().equals("abort")) {
+    		context.setState(FAILED);
+    	}
         if (!response.isRunning())
             context.setState(FINISHED); // stop querying
         Date time = response.getTime();
