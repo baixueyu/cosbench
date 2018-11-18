@@ -100,12 +100,9 @@ public class Syncer extends AbstractOperator {
         } 
     	//TODO destBucketName exist? end
     	for (String key : syncObjs) {
-    	//	String objectName = key;
-    	//	String versionId = syncObjs.get(key);
     		int index = key.indexOf("+");
     		String objectName = key.substring(0,index);
     		String versionId = key.substring(index+1, key.length());
-    		System.out.println(objectName+"::"+versionId);
     			Sample sample = doSyncData(srcBucketName, destBucketName, objectName, versionId, config, session, this);
     		    //TODO do sync metadata begin
     		    doSyncMetaData(srcBucketName, destBucketName, objectName, config, session, this);
@@ -151,21 +148,23 @@ public class Syncer extends AbstractOperator {
         //TODO Get object end
         //TODO send object begin
         long start = System.nanoTime();
+        XferCountingInputStream cin = new XferCountingInputStream(in);
         boolean succ = true;
         try {
         	List<String> upload_id = new ArrayList<String>(1); 
             List<Object> partETags = new ArrayList<Object>();
         	int i = 0;
         	do {
-        		int result = session.getWorkContext().getDestStorageApi().syncObject(destBucketName,srcBucketName, objectName, in, objSize.get(0), upload_id, partETags, versionId, session.getApi(), config);
+        		int result = session.getWorkContext().getDestStorageApi().syncObject(destBucketName,srcBucketName, objectName, cin, objSize.get(0), upload_id, partETags, versionId, session.getApi(), config);
         	    System.out.println(objectName + "已上传" + (i + 1) + "次");
         		if (result == 0) {
         			System.out.println(objectName + "第" + (i + 1) + "次上传后成功");
         			doLogInfo(session.getLogger(), objectName + "第" + (i + 1) + "次上传后成功");
         			break;
         	    } else {
-        	    	IOUtils.closeQuietly(in);
+        	    	IOUtils.closeQuietly(cin);
         		    in = session.getApi().getObject(srcBucketName, objectName, versionId, objSize, config);
+        		    cin = new XferCountingInputStream(in);
         		    i++;
         		    System.out.println(objectName + "第" + i + "次上传后失败");
         	    }		
@@ -191,17 +190,17 @@ public class Syncer extends AbstractOperator {
 			return new Sample(new Date(), op.getId(), op.getOpType(),
 					op.getSampleType(), op.getName(), false);
         } finally {
-            IOUtils.closeQuietly(in);
+            IOUtils.closeQuietly(cin);
         }
         //TODO send object end
         
         long end = System.nanoTime();
         if (succ) {
         	return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(),
-    				op.getName(), true, (end - start) / 1000000, (end - start) / 1000000, objSize.get(0));
+    				op.getName(), true, (end - start) / 1000000, cin.getXferTime(), objSize.get(0));
         } else {
         	return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(),
-				op.getName(), false, (end - start) / 1000000, (end - start) / 1000000, objSize.get(0));
+				op.getName(), false, (end - start) / 1000000, cin.getXferTime(), objSize.get(0));
         }
     }
 }
