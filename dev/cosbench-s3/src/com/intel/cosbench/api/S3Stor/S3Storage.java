@@ -210,8 +210,8 @@ public class S3Storage extends NoneStorage {
 						container, srcVersionConfig));
 			}
 		   if (srcVersionConfig.getStatus().equals("Enabled")
-					&& client.getBucketVersioningConfiguration(container)
-					.getStatus().equals("Off")) {
+					&& !client.getBucketVersioningConfiguration(container)
+					.getStatus().equals("Enabled")) {
 				srcVersionConfig.setMfaDeleteEnabled(null);
 			    client.setBucketVersioningConfiguration(new SetBucketVersioningConfigurationRequest(
 						container, srcVersionConfig));

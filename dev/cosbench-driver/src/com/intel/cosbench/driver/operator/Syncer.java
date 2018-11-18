@@ -151,6 +151,7 @@ public class Syncer extends AbstractOperator {
         //TODO Get object end
         //TODO send object begin
         long start = System.nanoTime();
+        boolean succ = true;
         try {
         	List<String> upload_id = new ArrayList<String>(1); 
             List<Object> partETags = new ArrayList<Object>();
@@ -170,6 +171,7 @@ public class Syncer extends AbstractOperator {
         	    }		
          	} while (i < 5);
         	if (i == 5) {
+        		succ = false;
         		Mission.setSyncObjFailCount(1); 			
         		doLogWarn(session.getLogger(), "/" + srcBucketName + "/" + objectName + " Í¬²½Ê§°Ü");
         	}
@@ -194,7 +196,12 @@ public class Syncer extends AbstractOperator {
         //TODO send object end
         
         long end = System.nanoTime();
-		return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(),
-				op.getName(), true, (end - start) / 1000000, (end - start) / 1000000, objSize.get(0));
+        if (succ) {
+        	return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(),
+    				op.getName(), true, (end - start) / 1000000, (end - start) / 1000000, objSize.get(0));
+        } else {
+        	return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(),
+				op.getName(), false, (end - start) / 1000000, (end - start) / 1000000, objSize.get(0));
+        }
     }
 }
