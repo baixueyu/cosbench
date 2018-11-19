@@ -20,12 +20,14 @@ package com.intel.cosbench.controller.tasklet;
 import static com.intel.cosbench.model.TaskState.SUBMITTED;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.config.Mission;
 import com.intel.cosbench.config.MissionWriter;
+import com.intel.cosbench.config.Operation;
 import com.intel.cosbench.config.Work;
 import com.intel.cosbench.config.castor.CastorConfigTools;
 import com.intel.cosbench.config.common.KVConfigParser;
