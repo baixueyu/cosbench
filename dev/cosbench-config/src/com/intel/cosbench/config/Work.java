@@ -247,9 +247,9 @@ public class Work implements Iterable<Operation> {
     public void setOperations(List<Operation> operations) {
         if (operations == null || operations.isEmpty())
             throw new ConfigException("a work must have opertations");
-        for(Operation op: operations) {
-        	op.setConfig(ConfigUtils.inherit(op.getConfig(), this.config));
-        }
+//        for(Operation op: operations) {
+//        	op.setConfig(ConfigUtils.inherit(op.getConfig(), this.config));
+//        }
         this.operations = operations;
     }
 

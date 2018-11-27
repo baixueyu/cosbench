@@ -209,6 +209,14 @@ public class S3Storage extends NoneStorage {
 				client.setBucketVersioningConfiguration(new SetBucketVersioningConfigurationRequest(
 						container, srcVersionConfig));
 			}
+		   if (srcVersionConfig.getStatus().equals("Enabled")
+					&& !client.getBucketVersioningConfiguration(container)
+					.getStatus().equals("Enabled")) {
+				srcVersionConfig.setMfaDeleteEnabled(null);
+			    client.setBucketVersioningConfiguration(new SetBucketVersioningConfigurationRequest(
+						container, srcVersionConfig));
+			}
+			
 		} catch (Exception e) {
 			throw new StorageException(e);
 		}
@@ -309,7 +317,7 @@ public class S3Storage extends NoneStorage {
 	}
 
 	public void listVersions(String bucketName, Map<String, String> marker,
-			Map<String, String> objs, int num) {
+			List<String> objs, int num) {
 		try {
 			// HashMap<String,Long> objs = new HashMap<String, Long>();
 			String versionIdMarker = null;
@@ -334,7 +342,8 @@ public class S3Storage extends NoneStorage {
 			// Get the result obj
 			List<S3VersionSummary> vs = vl.getVersionSummaries();
 			for (S3VersionSummary iter : vs) {
-				objs.put(iter.getKey(), iter.getVersionId());
+			//	objs.put(iter.getKey(), iter.getVersionId());
+				objs.add(iter.getKey() + "+" + iter.getVersionId());
 			}
 			// client.listObjects(bucketName);
 		} catch (Exception e) {
@@ -346,8 +355,9 @@ public class S3Storage extends NoneStorage {
 	public int syncObject(String container, String srcContainer, String object, InputStream data, long content_length, List<String> upload_id,
 			List<Object> partETags, String versionId, StorageAPI srcS3Storage, Config config) {
 		// super.createObject(container, object, data, length, config);
+		super.syncObject(container, srcContainer, object, data, content_length, upload_id, partETags, versionId, srcS3Storage, config);
 		long part_size = 15 * 1024 * 1024;
-		int success = 0;
+		int success = 0;;
 		try {
 			if (content_length < part_size) {
 				S3Storage s3 = (S3Storage) srcS3Storage;

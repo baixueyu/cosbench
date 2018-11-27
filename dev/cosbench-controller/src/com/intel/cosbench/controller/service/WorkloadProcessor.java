@@ -54,6 +54,8 @@ import com.intel.cosbench.config.XmlConfig;
 import com.intel.cosbench.config.castor.CastorConfigTools;
 import com.intel.cosbench.config.common.KVConfigParser;
 import com.intel.cosbench.controller.model.ControllerContext;
+import com.intel.cosbench.controller.model.DriverContext;
+import com.intel.cosbench.controller.model.DriverRegistry;
 import com.intel.cosbench.controller.model.StageContext;
 import com.intel.cosbench.controller.model.StageRegistry;
 import com.intel.cosbench.controller.model.TaskContext;
@@ -346,13 +348,12 @@ class WorkloadProcessor {
 	}
 
 	private void setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, Map<String, String> marker, Work work, StageContext stageContext, int syncNum, int iopsQos, String bandthQos, RateLimiter iopsLimiter){		
-		 List<Map<String, String>> objsList = new ArrayList<Map<String,String>>(); 
+		 List<List<String>> objsList = new ArrayList<List<String>>(); 
 		 int drivers = controllerContext.getDriverCount();
 		 S3Storage s3Storage = new S3Storage();
 		 s3Storage.init(srcStorageConfig, LOGGER);
 		 //String nextMarker;
 		 for (int i=0; i<drivers; i++){
-			Map<String, String> objs = new HashMap<String, String>();
 			try {
 				if (iopsLimiter.tryAcquire(iopsQos, 1, TimeUnit.SECONDS)) {
 				
@@ -361,6 +362,7 @@ class WorkloadProcessor {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			 List<String> objs = new ArrayList<String>();
 			 s3Storage.listVersions(srcBucket, marker, objs, syncNum);
 			 objsList.add(objs);
 			 //解决循环list不能停止在问题
@@ -370,7 +372,15 @@ class WorkloadProcessor {
 					 break;
 				 }
 				 marker.put(keyMarker, versionIdMarker);
-			 }			
+			 }
+			if (marker == null || marker.size() < 1) {
+				break;
+			}
+		 }
+		 if (objsList.size() < drivers) {
+			 for (int i = 0; i < drivers-objsList.size(); i++) {
+				 objsList.add(null);
+			 }
 		 }
 		 
 		 stageContext.setObjsList(objsList);
@@ -417,6 +427,24 @@ class WorkloadProcessor {
 				executeDelay(stageContext, closuredelay);
 		}
 		LOGGER.info("successfully ran stage {}", id);
+		
+		List<String> killDrivers = new ArrayList<String>();
+		killDrivers = stageContext.getKillDriver();
+		DriverRegistry registryOld = new DriverRegistry();
+		DriverRegistry registryNew = new DriverRegistry();
+		registryOld = controllerContext.getDriverRegistry();
+		DriverContext[] driverContexts = registryOld.getAllDrivers();
+		if (killDrivers!=null && !killDrivers.isEmpty()) {
+			for(int i=0; i<driverContexts.length; i++){
+				for (String killDriver : killDrivers) {
+					if (!killDriver.equals(driverContexts[i].getName())) {
+						registryNew.addDriver(driverContexts[i]);
+					}
+				}
+		    }
+			DriverContext[] test = registryNew.getAllDrivers();
+		    controllerContext.setDriverRegistry(registryNew);
+		} 
 	}
     
 	private void executeDelay(StageContext stageContext, int closuredelay)

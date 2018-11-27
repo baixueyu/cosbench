@@ -37,6 +37,9 @@ public class QueryHandler extends MissionHandler {
     private Response getResponse(MissionInfo info) {
         QueryResponse response = new QueryResponse();
         Snapshot snapshot = info.getSnapshot();
+        if (info.getMission().getType().equals("sync")) {
+        	response.setState(info.getMission().getState());
+        }
         response.setTime(snapshot.getTimestamp());
         response.setVersion(snapshot.getVersion());
         response.setMinVersion(snapshot.getMinVersion());

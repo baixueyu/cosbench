@@ -197,12 +197,13 @@ class StageRunner implements StageCallable {
         stageContext.setState(SUBMITTING);
         TaskRegistry tasks = stageContext.getTaskRegistry();
         if (stageContext.getStage().getName().equals("sync")) {
-        	List<Map<String, String>> objList = stageContext.getObjsList();
+        	List<List<String>> objList = stageContext.getObjsList();
             int i = 0;
             int size = objList.size();
             for (TaskContext task : tasks) {
-    			task.getSchedule().getWork().getSync().setObjs(objList.get(i));
-    			i++;
+    		//	task.getSchedule().getWork().getSync().setObjs(objList.get(i));
+    			task.setObjs(objList.get(i));
+            	i++;
     			//the problem of null point
     			if (i == size) {
     				break;
@@ -313,10 +314,17 @@ class StageRunner implements StageCallable {
         }
         LOGGER.debug("all {} tasklets have finished execution", num);
         List<String> errIds = new ArrayList<String>();
-        for (TaskContext task : stageContext.getTaskRegistry())
-            if (task.getState().equals(TaskState.ERROR)
-                    || task.getState().equals(TaskState.INTERRUPTED))
-                errIds.add(task.getId());
+        List<String> killDrivers = new ArrayList<String>();
+        for (TaskContext task : stageContext.getTaskRegistry()){
+        	if (task.getState().equals(TaskState.ERROR)
+                    || task.getState().equals(TaskState.INTERRUPTED)){
+        		 errIds.add(task.getId());
+        	}
+             if (task.getKillDriver()!= null && task.getKillDriver().length()>0) {
+            	 killDrivers.add("driver" + task.getKillDriver().substring(1));
+             } 
+             stageContext.setKillDriver(killDrivers);
+        }
         if (errIds.isEmpty())
             return; // all of the tasks are fine
         LOGGER.error("detected tasks {} have encountered errors", errIds);

@@ -88,20 +88,21 @@ public class Syncer extends AbstractOperator {
     protected void operate(int idx, int all, Session session) {
 		
 		
-    	Map<String, String> syncObjs = session.getWorkContext().getMission().getObjs();
+    	List<String> syncObjs = session.getWorkContext().getMission().getObjs();
     	String srcBucketName = session.getWorkContext().getMission().getSrcBucketName();
     	String destBucketName = session.getWorkContext().getMission().getDestBucketName();
     	//TODO destBucketName exist?  begin
     	try {
     		session.getWorkContext().getDestStorageApi().createContainer(destBucketName, srcBucketName, session.getApi(), config);
     	} catch (Exception e) {
-        	isUnauthorizedException(e, session);
+    		syncException(e, session);
         	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);      
         } 
     	//TODO destBucketName exist? end
-    	for (String key : syncObjs.keySet()) {
-    		String objectName = key;
-    		String versionId = syncObjs.get(key);
+    	for (String key : syncObjs) {
+    		int index = key.indexOf("+");
+    		String objectName = key.substring(0,index);
+    		String versionId = key.substring(index+1, key.length());
     			Sample sample = doSyncData(srcBucketName, destBucketName, objectName, versionId, config, session, this);
     		    //TODO do sync metadata begin
     		    doSyncMetaData(srcBucketName, destBucketName, objectName, config, session, this);
@@ -139,7 +140,7 @@ public class Syncer extends AbstractOperator {
             doLogErr(session.getLogger(), sie.getMessage(), sie);
             throw new AbortedException();
         } catch (Exception e) {
-        	isUnauthorizedException(e, session);
+        	syncException(e, session);
         	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);
 			return new Sample(new Date(), op.getId(), op.getOpType(),
 					op.getSampleType(), op.getName(), false);		
@@ -147,49 +148,59 @@ public class Syncer extends AbstractOperator {
         //TODO Get object end
         //TODO send object begin
         long start = System.nanoTime();
+        XferCountingInputStream cin = new XferCountingInputStream(in);
+        boolean succ = true;
         try {
         	List<String> upload_id = new ArrayList<String>(1); 
             List<Object> partETags = new ArrayList<Object>();
         	int i = 0;
         	do {
-        		int result = session.getWorkContext().getDestStorageApi().syncObject(destBucketName,srcBucketName, objectName, in, objSize.get(0), upload_id, partETags, versionId, session.getApi(), config);
+        		int result = session.getWorkContext().getDestStorageApi().syncObject(destBucketName,srcBucketName, objectName, cin, objSize.get(0), upload_id, partETags, versionId, session.getApi(), config);
         	    System.out.println(objectName + "已上传" + (i + 1) + "次");
         		if (result == 0) {
         			System.out.println(objectName + "第" + (i + 1) + "次上传后成功");
         			doLogInfo(session.getLogger(), objectName + "第" + (i + 1) + "次上传后成功");
-            	 break;
-        	    }
-        	    else {
-        	    	IOUtils.closeQuietly(in);
+        			break;
+        	    } else {
+        	    	IOUtils.closeQuietly(cin);
         		    in = session.getApi().getObject(srcBucketName, objectName, versionId, objSize, config);
-        		    i ++;
+        		    cin = new XferCountingInputStream(in);
+        		    i++;
         		    System.out.println(objectName + "第" + i + "次上传后失败");
         	    }		
          	} while (i < 5);
         	if (i == 5) {
-        		Mission.setSyncObjFailCount(1);
-			//	System.out.println(Mission.getSyncObjFailCount()+"lala");	 			
-        		doLogWarn(session.getLogger(), "/" + srcBucketName + "/" + objectName + "sync failure");
+        		succ = false;
+        		Mission.setSyncObjFailCount(1); 			
+        		doLogWarn(session.getLogger(), "/" + srcBucketName + "/" + objectName + " 同步失败");
         	}
-        	if(Mission.getSyncObjFailCount() >= 100){
-        		doLogErr(session.getLogger(), "the failure gets to limit, terminate current mission");
+        	if (Mission.getSyncObjFailCount() >= 100) {
+        		doLogErr(session.getLogger(), "数据同步失败到达极限，退出本次任务");
         		throw new AbortedException();
         	}
+        } catch (AbortedException ae) {
+            doLogErr(session.getLogger(), ae.getMessage(), ae);
+            throw new AbortedException(); 
         } catch (StorageInterruptedException sie) {
             doLogErr(session.getLogger(), sie.getMessage(), sie);
             throw new AbortedException();
         } catch (Exception e) {
-        	isUnauthorizedException(e, session);
+        	syncException(e, session);
         	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);
 			return new Sample(new Date(), op.getId(), op.getOpType(),
 					op.getSampleType(), op.getName(), false);
         } finally {
-            IOUtils.closeQuietly(in);
+            IOUtils.closeQuietly(cin);
         }
         //TODO send object end
         
         long end = System.nanoTime();
-		return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(),
-				op.getName(), true, (end - start) / 1000000, (end - start) / 1000000, objSize.get(0));
+        if (succ) {
+        	return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(),
+    				op.getName(), true, (end - start) / 1000000, cin.getXferTime(), objSize.get(0));
+        } else {
+        	return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(),
+				op.getName(), false, (end - start) / 1000000, cin.getXferTime(), objSize.get(0));
+        }
     }
 }

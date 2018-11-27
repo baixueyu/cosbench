@@ -20,12 +20,14 @@ package com.intel.cosbench.controller.tasklet;
 import static com.intel.cosbench.model.TaskState.SUBMITTED;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.config.Mission;
 import com.intel.cosbench.config.MissionWriter;
+import com.intel.cosbench.config.Operation;
 import com.intel.cosbench.config.Work;
 import com.intel.cosbench.config.castor.CastorConfigTools;
 import com.intel.cosbench.config.common.KVConfigParser;
@@ -75,6 +77,8 @@ class Submitter extends AbstractCommandTasklet<SubmitResponse> {
         mission.setConfig(work.getConfig());
         mission.setAuth(work.getAuth());
         if (work.getType().equals("sync")) {
+        	mission.setType("sync");
+        	mission.setState("normal");
         	mission.setStorage(work.getSync().getSyncStorage());
         	mission.setObjs(work.getSync().getObjs());
         	mission.setDestBucketName(work.getSync().getDestBucketName());

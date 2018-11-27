@@ -176,17 +176,19 @@ class WorkAgent extends AbstractAgent implements Session, OperationListener {
 
     private void doWork() {
         doSnapshot();
-        while (!workerContext.isFinished()) {
+        while (!workerContext.isFinished() && !workerContext.isAborted()) {
             try {
                 performOperation();
-			}catch (AbortedException ae) {
+			} catch (AbortedException ae) {
                 if (lrsample > frsample)
                     doSummary();
-                workerContext.setFinished(true);
+            	if (workerContext.getMission().getType().equals("sync")) {
+            		workerContext.setAborted(true);
+            		workerContext.getMission().setState("abort");
+            	} else {
+                    workerContext.setFinished(true);
+            	}
             }
-        	if ("sync".equals("sync")) {
-        		workerContext.setFinished(true);
-        	}
         }
         doSnapshot();
     }
@@ -203,7 +205,7 @@ class WorkAgent extends AbstractAgent implements Session, OperationListener {
         OperatorContext context = operatorRegistry.getOperator(op);
         try{
         	context.getOperator().operate(this);
-        }catch(AuthException ae) {
+        } catch(AuthException ae) {
         	reLogin();
         }
     }

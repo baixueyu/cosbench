@@ -169,7 +169,7 @@ public class WorkerContext implements WorkerInfo {
 
     public void setSnapshot(Snapshot snapshot) {
     	this.snapshot = snapshot;
-
+    	
     	this.snapshot.setVersion(version);
     	this.snapshot.setMinVersion(version);
     	this.snapshot.setMaxVersion(version);
