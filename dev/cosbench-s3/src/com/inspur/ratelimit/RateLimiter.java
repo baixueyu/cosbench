@@ -30,14 +30,15 @@ public class RateLimiter {
 		this.stopwatch = checkNotNull(stopwatch);
 	}
 
-	public RateLimiter(String key, Double permitsPerSecond, int maxBurstSeconds, SyncLock syncLock) {
+	public RateLimiter(String key, Double permitsPerSecond, int maxBurstSeconds, SyncLock syncLock, RedisUtil redis) {
 		super();
 
 		this.key = key;
 		this.permitsPerSecond = permitsPerSecond;
 		this.maxBurstSeconds = maxBurstSeconds;
 		this.stopwatch = checkNotNull(SleepingStopwatch.createFromSystemTimer());
-		this.jedis = RedisUtil.getJedis();
+		redis.CreateRedisPool();
+		this.jedis = redis.getJedis();
 		this.syncLock = syncLock;
 		putDefaultPermits();
 	}

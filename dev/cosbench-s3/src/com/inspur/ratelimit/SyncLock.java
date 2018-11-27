@@ -19,22 +19,21 @@ class SyncLockFactory {
      * @param key Redis key
      * @param expire Redis TTL/秒，默认10秒
      * @param safetyTime 安全时间/秒，为了防止程序异常导致死锁，在此时间后强制拿锁，默认 expire * 5 秒
+	 * @param redis 
 	 * @return 
      */
-    SyncLock build(String key, Long expire, Long safetyTime) {
-        if (!syncLockMap.containsKey(key)) {
-        	setStringRedisTemplate();
-            syncLockMap.put(key, new SyncLock(key, stringRedisTemplate, expire, safetyTime));
-        }
+    SyncLock build(String key, Long expire, Long safetyTime, RedisUtil redis) {  
+    	//不管存在否，均覆盖
+        //if (!syncLockMap.containsKey(key)) {
+        	//setStringRedisTemplate();
+        this.stringRedisTemplate = redis.createStringRedisTemplate();
+        syncLockMap.put(key, new SyncLock(key, stringRedisTemplate, expire, safetyTime));
+        //}
         return syncLockMap.get(key);
     }
     
     public StringRedisTemplate getStringRedisTemplate() {
 		return stringRedisTemplate;
-	}
-
-	public void setStringRedisTemplate() {
-		this.stringRedisTemplate = RedisUtil.getRedis();
 	}
 
 	public Map<String, SyncLock> getSyncLockMap() {
@@ -73,6 +72,7 @@ class SyncLock {
 		this.expire = expire;
 		this.safetyTime = safetyTime;
 		setWaitMillisPer();
+		unLock();
 	}
 	
 	public String getKey() {
@@ -171,7 +171,6 @@ class SyncLock {
             Thread.sleep(getWaitMillisPer());
             waitAlready += getWaitMillisPer();
         }
-
         // stringRedisTemplate.expire(key, expire, TimeUnit.SECONDS)
         stringRedisTemplate.opsForValue().set(key, value, expire, TimeUnit.SECONDS);
     }
@@ -184,7 +183,7 @@ class SyncLock {
      */
     void unLock() {
        String iter =  stringRedisTemplate.opsForValue().get(getKey());
-       if (iter.equals(getValue())) {
+       if (iter != null && iter.equals(getValue())) {
            stringRedisTemplate.delete(key);
         }
     }

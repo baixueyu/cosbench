@@ -49,7 +49,9 @@ public class Work implements Iterable<Operation> {
     private String config = "";
     private Auth auth;
     private Storage storage;    
-    private Sync sync;  
+    private Sync sync; 
+    private int  iopsQos;
+    private String bandthQos;
 
 	private List<Operation> operations;
 
@@ -258,9 +260,25 @@ public class Work implements Iterable<Operation> {
             operations = new ArrayList<Operation>();
         op.setConfig(ConfigUtils.inherit(op.getConfig(), this.config));
         operations.add(op);
-    }
+    }   
 
-    @Override
+    public int getIopsQos() {
+		return iopsQos;
+	}
+
+	public void setIopsQos(int iopsQos) {
+		this.iopsQos = iopsQos;
+	}
+
+	public String getBandthQos() {
+		return bandthQos;
+	}
+
+	public void setBandthQos(String bandthQos) {
+		this.bandthQos = bandthQos;
+	}
+
+	@Override
     public Iterator<Operation> iterator() {
         return operations.iterator();
     }

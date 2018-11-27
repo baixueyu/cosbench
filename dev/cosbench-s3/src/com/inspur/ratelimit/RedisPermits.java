@@ -22,6 +22,7 @@ public class RedisPermits {
 	public RedisPermits(double permitsPerSecond, int maxBurstSeconds) {
 		this.maxPermits = (long) (permitsPerSecond * maxBurstSeconds);
 		this.storedPermits = (long) permitsPerSecond;
+		long time = TimeUnit.SECONDS.toMillis(1);
 		this.intervalMillis = (long) (TimeUnit.SECONDS.toMillis(1) / permitsPerSecond);
 		this.nextFreeTicketMillis = System.currentTimeMillis();
 

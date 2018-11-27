@@ -41,6 +41,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import com.inspur.ratelimit.RateLimiter;
+import com.inspur.ratelimit.RateLimiterFactory;
+import com.inspur.ratelimit.RedisUtil;
 import com.intel.cosbench.api.S3Stor.S3Storage;
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.config.Operation;
@@ -206,6 +209,24 @@ class WorkloadProcessor {
         			} catch (Exception e) {
         	            syncNum = 1000;
         			}
+        			//qos related begin
+        			int iopsQos = getIopsQosValue(syncConfig);
+        			String bandthQos = getBandthQosValue(syncConfig);
+        			RateLimiter iopsLimiter = null;
+        			RateLimiter bandthLimiter = null;
+        			RedisUtil redis = new RedisUtil("10.180.210.55", 6379, "1q2w3e4r!");
+    				RateLimiterFactory rateLimiterFactory = new RateLimiterFactory();
+        			if (iopsQos != 0) {
+        				// RateLimiter limiter = RateLimiter.create(20.0);// 每秒放置v个令脾        				
+        				iopsLimiter = rateLimiterFactory.build("ratelimiter:iops",
+        						(double)iopsQos, 30, redis);
+        			} 
+        			if (bandthQos != null) {
+        				// RateLimiter limiter = RateLimiter.create(20.0);// 每秒放置v个令脾
+        				bandthLimiter = rateLimiterFactory.build("ratelimiter:bandth",
+        						(double)iopsQos, 30, redis);
+        			}
+        			//Qos related end
             		if (syncConfig.get("sync_type").equals("bucket")) {
         				srcBucket = syncConfig.get("srcBucket");
                    	 	destBucket = syncConfig.get("destBucket"); 
@@ -216,7 +237,7 @@ class WorkloadProcessor {
                    		Map<String, String> nextMarker = new HashMap<String, String>(1);
                    	 	while (true) {                    	
                        	 	Config config = getSrcStorageConfig(storageConfig);
-                       	 	setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext, syncNum);         
+                       	 	setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext, syncNum, iopsQos, bandthQos, iopsLimiter);         
                 			runStage(stageContext);
                        		String key = null;
             				String versionIdMarker = null;
@@ -236,7 +257,7 @@ class WorkloadProcessor {
             				srcBucket = destBucket = bucketName;
             				while (true) {                    	
             					config = getSrcStorageConfig(storageConfig);
-            					setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext, syncNum);         
+            					setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext, syncNum, iopsQos, bandthQos, iopsLimiter);         
             					runStage(stageContext);
                 				String key = null;
                 				String versionIdMarker = null;
@@ -270,8 +291,41 @@ class WorkloadProcessor {
 		}
         workloadContext.setState(FINISHED);
     }
-    
-    private Config getSrcStorageConfig(String storageConfig) {
+
+	private int getIopsQosValue(Config syncConfig) {
+		// TODO Auto-generated method stub
+		int iops = 0;
+		try {
+			String iopsStr = syncConfig.get("iopsQos");
+			if (iopsStr.charAt(iopsStr.length() -1) != 'n') {
+				return 0;
+			}
+			iops =Integer.parseInt(iopsStr.substring(0, iopsStr.length() - 1));
+		} catch (Exception e) {
+            return 0;
+		}
+		return iops;
+	}
+
+	private String getBandthQosValue(Config syncConfig) {
+		// TODO Auto-generated method stub
+		String bandth = null;
+		try {
+			String bandthStr = syncConfig.get("bandthQos");
+			int length = bandthStr.length();
+			if (bandthStr.charAt(length - 4) != 'n' && bandthStr.charAt(length - 3) != ':' && 
+					bandthStr.charAt(length - 1) != 'k' && bandthStr.charAt(length - 1) != 'K' &&
+					bandthStr.charAt(length - 1) != 'M' && bandthStr.charAt(length - 1) != 'm') {
+				return null;
+			}
+			bandth = bandthStr.substring(0, bandthStr.length() - 4) + bandthStr.substring(length - 3 , length);
+		} catch (Exception e) {
+            return null;
+		}
+		return bandth;
+	}
+
+	private Config getSrcStorageConfig(String storageConfig) {
     	// TODO Auto-generated method stub
     	Config workCon =  KVConfigParser.parse(storageConfig);
 		 
@@ -291,14 +345,22 @@ class WorkloadProcessor {
 		return s3Storage.listBuckets();
 	}
 
-	private void setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, Map<String, String> marker, Work work, StageContext stageContext, int syncNum){
+	private void setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, Map<String, String> marker, Work work, StageContext stageContext, int syncNum, int iopsQos, String bandthQos, RateLimiter iopsLimiter){		
 		 List<Map<String, String>> objsList = new ArrayList<Map<String,String>>(); 
 		 int drivers = controllerContext.getDriverCount();
 		 S3Storage s3Storage = new S3Storage();
 		 s3Storage.init(srcStorageConfig, LOGGER);
 		 //String nextMarker;
 		 for (int i=0; i<drivers; i++){
-			 Map<String, String> objs = new HashMap<String, String>();
+			Map<String, String> objs = new HashMap<String, String>();
+			try {
+				if (iopsLimiter.tryAcquire(iopsQos, 1, TimeUnit.SECONDS)) {
+				
+				}
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			 s3Storage.listVersions(srcBucket, marker, objs, syncNum);
 			 objsList.add(objs);
 			 //解决循环list不能停止在问题
@@ -308,21 +370,14 @@ class WorkloadProcessor {
 					 break;
 				 }
 				 marker.put(keyMarker, versionIdMarker);
-			 }
-			
+			 }			
 		 }
 		 
-		 //TODO just for test begin
-		 //Map<String, Long> objs = new HashMap<String, Long>();
-		 //objs.put("obj1", (long) 555);
-		 //objs.put("obj2", (long) 666);
-		 //objs.put("obj3", (long) 777);
-		 //objs.put("obj4", (long) 888);
-		 //TODO just for test end
-         //work.getSync().setObjs(objs);
 		 stageContext.setObjsList(objsList);
          work.getSync().setSrcBucketName(srcBucket);
          work.getSync().setDestBucketName(destBucket);
+         work.setIopsQos(iopsQos);
+         work.setBandthQos(bandthQos);
    }
 
     private static String millisToHMS(long millis) {

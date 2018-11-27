@@ -16,82 +16,91 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 public final class RedisUtil {
 
 	// Redis服务器IP
-	private static String ADDR = "10.180.210.55";
+	private String ADDR = "10.180.210.55";
 
 	// Redis的端口号
-	private static int PORT = 6379;
+	private int PORT = 6379;
 
 	// 访问密码
-	private static String AUTH = "1q2w3e4r!";
+	private String AUTH = "1q2w3e4r!";
 
 	// 可用连接实例的最大数目，默认值为8；
 	// 如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted(耗尽)。
-	private static int MAX_ACTIVE = 1024;
+	private int MAX_ACTIVE = 1024;
 
 	// 控制一个pool最多有多少个状态为idle(空闲的)的jedis实例，默认值也是8。
-	private static int MAX_IDLE = 200;
+	private int MAX_IDLE = 200;
 
 	// 等待可用连接的最大时间，单位毫秒，默认值为-1，表示永不超时。如果超过等待时间，则直接抛出JedisConnectionException；
-	private static int MAX_WAIT = 10000;
+	private int MAX_WAIT = 10000;
 
-	private static int TIMEOUT = 10000;
+	private int TIMEOUT = 10000;
 
 	// 在borrow一个jedis实例时，是否提前进行validate操作；如果为true，则得到的jedis实例均是可用的；
-	private static boolean TEST_ON_BORROW = true;
+	private boolean TEST_ON_BORROW = true;
 
-	private static JedisPool jedisPool = null;
-	private static StringRedisTemplate redis = null;
+	private JedisPool jedisPool = null;
+	private StringRedisTemplate redis = null;
 
+	public RedisUtil(String addr, int port, String passwd) {
+		this.ADDR = addr;
+		this.PORT = port;
+		this.AUTH = passwd;
+	}
 	/**
 	 * 初始化Redis连接池
+	 * @return 
 	 */
-	static {
+	public JedisPool CreateRedisPool() {
 		try {
 			JedisPoolConfig config = new JedisPoolConfig();
 			//config.setMaxActive(MAX_ACTIVE);
-			config.setMaxIdle(MAX_IDLE);
+			config.setMaxIdle(this.MAX_IDLE);
 			//config.setMaxWait(MAX_WAIT);
-			config.setMaxTotal(MAX_ACTIVE);
-			config.setMaxWaitMillis(MAX_WAIT);
-			config.setTestOnBorrow(TEST_ON_BORROW);
-			jedisPool = new JedisPool(config, ADDR, PORT, TIMEOUT, AUTH);
+			config.setMaxTotal(this.MAX_ACTIVE);
+			config.setMaxWaitMillis(this.MAX_WAIT);
+			config.setTestOnBorrow(this.TEST_ON_BORROW);
+			this.jedisPool = new JedisPool(config, this.ADDR, this.PORT, this.TIMEOUT, this.AUTH);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return this.jedisPool;
 	}
 
 	/**
 	 * 初始化StringRedisTemplate连接池
+	 * @return 
 	 */
-	static {
+	public StringRedisTemplate createStringRedisTemplate() {
 		try {
 			//实例化链接工厂
 			JedisConnectionFactory connectionFactory = new JedisConnectionFactory();
 			//设置host
-			connectionFactory.setHostName(ADDR);
+			connectionFactory.setHostName(this.ADDR);
 			//设置端口
-			connectionFactory.setPort(PORT);
+			connectionFactory.setPort(this.PORT);
 			//设置密码
-			connectionFactory.setPassword(AUTH);
+			connectionFactory.setPassword(this.AUTH);
 			//初始化connectionFactory
 			connectionFactory.afterPropertiesSet();
 			//实例化
-		    redis = new StringRedisTemplate(connectionFactory);
+		    this.redis = new StringRedisTemplate(connectionFactory);
 			//初始化StringRedisTemplate
-			redis.afterPropertiesSet();
+			this.redis.afterPropertiesSet();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return this.redis;
 	}
 	/**
 	 * 获取Jedis实例
 	 * 
 	 * @return
 	 */
-	public synchronized static Jedis getJedis() {
+	public synchronized Jedis getJedis() {
 		try {
-			if (jedisPool != null) {
-				Jedis resource = jedisPool.getResource();
+			if (this.jedisPool != null) {
+				Jedis resource = this.jedisPool.getResource();
 				return resource;
 			} else {
 				return null;
@@ -107,9 +116,9 @@ public final class RedisUtil {
 	 * 
 	 * @param jedis
 	 */
-	public static void returnResource(final Jedis jedis) {
+	public void returnResource(final Jedis jedis) {
 		if (jedis != null) {
-			jedisPool.returnResource(jedis);
+			this.jedisPool.returnResource(jedis);
 		}
 	}
 
@@ -150,12 +159,12 @@ public final class RedisUtil {
 		return null;
 	}
 
-	public static StringRedisTemplate getRedis() {
-		return redis;
+	public StringRedisTemplate getRedis() {
+		return this.redis;
 	}
 
-	public static void setRedis(StringRedisTemplate redis) {
-		RedisUtil.redis = redis;
+	public void setRedis(StringRedisTemplate redis) {
+		this.redis = redis;
 	}
 	
 }
