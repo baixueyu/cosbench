@@ -33,6 +33,16 @@ public class RateLimiterFactory {
 		//}
 		return (RateLimiter) rateLimiterMap.get(key);
 	}
+	
+	public synchronized RateLimiter build(String key, Double permitsPerSecond,
+			int maxBurstSeconds, RedisUtil redis, boolean driver) {
+		//if (!rateLimiterMap.containsKey(key)) {
+		//不管是否存在，均覆盖
+		rateLimiterMap.put(key, new RateLimiter(key, permitsPerSecond,
+					maxBurstSeconds, syncLockFactory.build(key + ":lock",  10L,  50L, redis, driver), redis, driver));
+		//}
+		return (RateLimiter) rateLimiterMap.get(key);
+	}
 
 	public RateLimiter get(String key) {
 		// TODO Auto-generated method stub

@@ -50,8 +50,7 @@ public class Work implements Iterable<Operation> {
     private Auth auth;
     private Storage storage;    
     private Sync sync; 
-    private int  iopsQos;
-    private String bandthQos;
+    private boolean bandthQos = false;
 
 	private List<Operation> operations;
 
@@ -262,19 +261,11 @@ public class Work implements Iterable<Operation> {
         operations.add(op);
     }   
 
-    public int getIopsQos() {
-		return iopsQos;
-	}
-
-	public void setIopsQos(int iopsQos) {
-		this.iopsQos = iopsQos;
-	}
-
-	public String getBandthQos() {
+	public boolean getBandthQos() {
 		return bandthQos;
 	}
 
-	public void setBandthQos(String bandthQos) {
+	public void setBandthQos(boolean bandthQos) {
 		this.bandthQos = bandthQos;
 	}
 

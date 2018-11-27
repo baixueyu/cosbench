@@ -42,6 +42,18 @@ public class RateLimiter {
 		this.syncLock = syncLock;
 		putDefaultPermits();
 	}
+	//for driver get qos
+	public RateLimiter(String key, Double permitsPerSecond, int maxBurstSeconds, SyncLock syncLock, RedisUtil redis, Boolean driver) {
+		super();
+
+		this.key = key;
+		this.permitsPerSecond = permitsPerSecond;
+		this.maxBurstSeconds = maxBurstSeconds;
+		this.stopwatch = checkNotNull(SleepingStopwatch.createFromSystemTimer());
+		redis.CreateRedisPool();
+		this.jedis = redis.getJedis();
+		this.syncLock = syncLock;
+	}
 
 	public Long getNow() {
 		this.now = System.currentTimeMillis();

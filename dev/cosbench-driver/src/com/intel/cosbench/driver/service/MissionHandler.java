@@ -26,6 +26,9 @@ import java.util.concurrent.*;
 //import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 
+import com.inspur.ratelimit.RateLimiter;
+import com.inspur.ratelimit.RateLimiterFactory;
+import com.inspur.ratelimit.RedisUtil;
 import com.intel.cosbench.api.auth.*;
 import com.intel.cosbench.api.context.AuthContext;
 import com.intel.cosbench.api.storage.*;
@@ -197,18 +200,23 @@ class MissionHandler {
         int workers = mission.getWorkers();
         int offset = mission.getOffset();
         if (getType() != null &&  getType().equals("sync")) {
+        	//for qos
+    		RedisUtil redis = null;
+    		RateLimiter bandthLimiter;
+    		String bandthQos = "13244:4k";
+    		redis = new RedisUtil("10.180.210.55", 6379, "1q2w3e4r!");
+    		RateLimiterFactory rateLimiterFactory = new RateLimiterFactory();
+    		if (bandthQos != null) {
+    			double bandth = Double.valueOf(bandthQos.substring(0, bandthQos.length() - 3));
+    			bandthLimiter = rateLimiterFactory.build("ratelimiter:iops",
+    					bandth, 30, redis, true);
+    		} 
         	//TODO for sync operator set object_list to registry, divide equally
         	boolean isEmpty = false;
         	List<String> objs = mission.getObjs();
         	if (objs == null || objs.size() == 0) {
         		isEmpty = true;
         	}
-        	//TODO just for test
-        	//Map<String, Long> objs = new HashMap<String, Long>();
-        	//objs.put("obj1", (long) 111);
-        	//objs.put("obj2", (long) 222);
-        	//objs.put("obj3", (long) 333);
-        	//objs.put("obj4", (long) 444);
         	int objSize = 0;
         	if (!isEmpty) {
         		objSize = objs.size();   
@@ -249,17 +257,15 @@ class MissionHandler {
                 		iter.remove();
                 		sub++;
                 	}  
-                }
-                
+                }               
                 // Get sync subMap
                 if (syncObjs.size() == 0) {
                 	break;
                 }
                 taskMission.setObjs(syncObjs);
-                //set srcBucketName & destBucketName
-                //mission.setSrcBucketName(msrcBucketName);
-                //mission.setDestBucketName(destBucketName);
-                registry.addWorker(createWorkerContext(i + offset + 1, taskMission));
+                WorkerContext workContext = createWorkerContext(i + offset + 1, taskMission);
+                workContext.setRatelimiter(bandthLimiter);
+                registry.addWorker(workContext);
                 
             }
         } else {

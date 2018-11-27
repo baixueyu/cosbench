@@ -21,6 +21,7 @@ import java.util.Random;
 
 import org.apache.commons.lang.math.RandomUtils;
 
+import com.inspur.ratelimit.RateLimiter;
 import com.intel.cosbench.api.auth.AuthAPI;
 import com.intel.cosbench.api.storage.StorageAPI;
 import com.intel.cosbench.bench.*;
@@ -59,9 +60,9 @@ public class WorkerContext implements WorkerInfo {
     /* Each worker has its private required version */
     private volatile int version = 0;
     private volatile int runlen = 0;
+    private RateLimiter ratelimiter = null;
 
-    
-    public WorkerContext() {
+	public WorkerContext() {
         /* empty */
     }
 
@@ -202,6 +203,14 @@ public class WorkerContext implements WorkerInfo {
 
 	public void setErrorStatistics(ErrorStatistics errorStatistics) {
 		this.errorStatistics = errorStatistics;
+	}
+    
+    public RateLimiter getRatelimiter() {
+		return ratelimiter;
+	}
+
+	public void setRatelimiter(RateLimiter ratelimiter) {
+		this.ratelimiter = ratelimiter;
 	}
 
 	@Override

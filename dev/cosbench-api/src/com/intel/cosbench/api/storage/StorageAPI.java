@@ -20,6 +20,7 @@ package com.intel.cosbench.api.storage;
 import java.io.InputStream;
 import java.util.List;
 
+import com.inspur.ratelimit.RateLimiter;
 import com.intel.cosbench.api.context.AuthContext;
 import com.intel.cosbench.api.context.Context;
 import com.intel.cosbench.config.Config;
@@ -182,8 +183,5 @@ public interface StorageAPI {
 	public void syncObject(String destBucketName, String objectName,
 			InputStream in, long objSize, Config config);
 	public int syncObject(String container, String srcContainer, String object, InputStream data,
-			long content_length, List<String> upload_id, List<Object> partETags, String versionId, StorageAPI  srcS3Storage, Config config);
-	
-	
-
+			long content_length, List<String> upload_id, List<Object> partETags, String versionId, StorageAPI  srcS3Storage, Config config, RateLimiter rateLimiter);
 }

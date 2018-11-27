@@ -58,6 +58,7 @@ public class Mission implements Iterable<Operation> {
     private static int syncObjFailCount = 0;
     private String type;
     private String state;
+	private boolean bandthQos;
       
     public Mission() {
         /* empty */
@@ -346,10 +347,12 @@ public class Mission implements Iterable<Operation> {
             throw new ConfigException("op ratio should sum to 100");
     }
 
+	public void setBandthQos(boolean bandthQos) {
+		// TODO Auto-generated method stub
+		this.bandthQos = bandthQos;		
+	}
 
-
-
-
-
-
+	public boolean isBandthQos() {
+		return bandthQos;
+	}
 }

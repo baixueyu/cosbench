@@ -22,6 +22,7 @@ import static com.intel.cosbench.api.storage.StorageConstants.*;
 import java.io.*;
 import java.util.*;
 
+import com.inspur.ratelimit.RateLimiter;
 import com.intel.cosbench.api.auth.NoneAuth;
 import com.intel.cosbench.api.context.*;
 import com.intel.cosbench.config.Config;
@@ -142,15 +143,14 @@ public class NoneStorage implements StorageAPI {
             logger.info("performing DELETE at /{}/{}", container, object);
     }
     
-    @Override
     public void syncObject(String container, String object, InputStream data,
             long length, Config config) {
     	 if (logging)
              logger.info("performing Sync at /{}/{}", container, object);
     }
-    @Override
+    
     public int syncObject(String container, String srcContainer, String object, InputStream data, long content_length, List<String> upload_id,
-    		List<Object> partETags, String versionId, StorageAPI  srcS3Storage, Config config) {
+    		List<Object> partETags, String versionId, StorageAPI  srcS3Storage, Config config, RateLimiter rateLimiter) {
     	if (logging)
             logger.info("performing Sync at /{}/{}", srcContainer, object);
     	return 0;

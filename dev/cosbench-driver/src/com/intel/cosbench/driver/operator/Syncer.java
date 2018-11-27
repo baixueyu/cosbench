@@ -5,6 +5,7 @@ import java.util.*;
 
 import org.apache.commons.io.IOUtils;
 
+import com.inspur.ratelimit.RateLimiter;
 import com.intel.cosbench.api.storage.StorageException;
 import com.intel.cosbench.api.storage.StorageInterruptedException;
 import com.intel.cosbench.bench.Result;
@@ -91,6 +92,7 @@ public class Syncer extends AbstractOperator {
     	List<String> syncObjs = session.getWorkContext().getMission().getObjs();
     	String srcBucketName = session.getWorkContext().getMission().getSrcBucketName();
     	String destBucketName = session.getWorkContext().getMission().getDestBucketName();
+    	RateLimiter rateLimiter = session.getWorkContext().getRatelimiter();
     	//TODO destBucketName exist?  begin
     	try {
     		session.getWorkContext().getDestStorageApi().createContainer(destBucketName, srcBucketName, session.getApi(), config);
@@ -103,7 +105,7 @@ public class Syncer extends AbstractOperator {
     		int index = key.indexOf("+");
     		String objectName = key.substring(0,index);
     		String versionId = key.substring(index+1, key.length());
-    			Sample sample = doSyncData(srcBucketName, destBucketName, objectName, versionId, config, session, this);
+    			Sample sample = doSyncData(srcBucketName, destBucketName, objectName, versionId, config, session, this, rateLimiter);
     		    //TODO do sync metadata begin
     		    doSyncMetaData(srcBucketName, destBucketName, objectName, config, session, this);
     		    //TODO do sync metadata end
@@ -126,7 +128,7 @@ public class Syncer extends AbstractOperator {
     	//TODO sync user metadata end
 	}
 
-	public static  Sample doSyncData(String srcBucketName, String destBucketName, String objectName, String versionId, Config config, Session session, Operator op) {
+	public static  Sample doSyncData(String srcBucketName, String destBucketName, String objectName, String versionId, Config config, Session session, Operator op, RateLimiter rateLimiter) {
 		if (Thread.interrupted())
 			throw new AbortedException();
         //TODO Get object begin 
@@ -155,7 +157,7 @@ public class Syncer extends AbstractOperator {
             List<Object> partETags = new ArrayList<Object>();
         	int i = 0;
         	do {
-        		int result = session.getWorkContext().getDestStorageApi().syncObject(destBucketName,srcBucketName, objectName, cin, objSize.get(0), upload_id, partETags, versionId, session.getApi(), config);
+        		int result = session.getWorkContext().getDestStorageApi().syncObject(destBucketName,srcBucketName, objectName, cin, objSize.get(0), upload_id, partETags, versionId, session.getApi(), config, rateLimiter);
         	    System.out.println(objectName + "已上传" + (i + 1) + "次");
         		if (result == 0) {
         			System.out.println(objectName + "第" + (i + 1) + "次上传后成功");

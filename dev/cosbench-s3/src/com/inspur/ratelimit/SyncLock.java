@@ -32,6 +32,16 @@ class SyncLockFactory {
         return syncLockMap.get(key);
     }
     
+    SyncLock build(String key, Long expire, Long safetyTime, RedisUtil redis, boolean driver) {  
+    	//不管存在否，均覆盖
+        //if (!syncLockMap.containsKey(key)) {
+        	//setStringRedisTemplate();
+        this.stringRedisTemplate = redis.createStringRedisTemplate();
+        syncLockMap.put(key, new SyncLock(key, stringRedisTemplate, expire, safetyTime, driver));
+        //}
+        return syncLockMap.get(key);
+    }
+    
     public StringRedisTemplate getStringRedisTemplate() {
 		return stringRedisTemplate;
 	}
@@ -73,6 +83,16 @@ class SyncLock {
 		this.safetyTime = safetyTime;
 		setWaitMillisPer();
 		unLock();
+	}
+	
+	public SyncLock(String key, StringRedisTemplate stringRedisTemplate,
+			Long expire, Long safetyTime, boolean driver) {
+		super();
+		this.key = key;
+		this.stringRedisTemplate = stringRedisTemplate;
+		this.expire = expire;
+		this.safetyTime = safetyTime;
+		setWaitMillisPer();
 	}
 	
 	public String getKey() {

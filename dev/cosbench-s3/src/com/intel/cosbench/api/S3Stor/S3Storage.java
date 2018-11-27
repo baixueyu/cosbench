@@ -50,6 +50,7 @@ import com.amazonaws.services.s3.model.SetBucketVersioningConfigurationRequest;
 import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.model.UploadPartResult;
 import com.amazonaws.services.s3.model.VersionListing;
+import com.inspur.ratelimit.RateLimiter;
 import com.intel.cosbench.api.context.AuthContext;
 import com.intel.cosbench.api.storage.NoneStorage;
 import com.intel.cosbench.api.storage.StorageAPI;
@@ -353,9 +354,9 @@ public class S3Storage extends NoneStorage {
 
 	@Override
 	public int syncObject(String container, String srcContainer, String object, InputStream data, long content_length, List<String> upload_id,
-			List<Object> partETags, String versionId, StorageAPI srcS3Storage, Config config) {
+			List<Object> partETags, String versionId, StorageAPI srcS3Storage, Config config, RateLimiter ratelimiter) {
 		// super.createObject(container, object, data, length, config);
-		super.syncObject(container, srcContainer, object, data, content_length, upload_id, partETags, versionId, srcS3Storage, config);
+		super.syncObject(container, srcContainer, object, data, content_length, upload_id, partETags, versionId, srcS3Storage, config, ratelimiter);
 		long part_size = 15 * 1024 * 1024;
 		int success = 0;;
 		try {
