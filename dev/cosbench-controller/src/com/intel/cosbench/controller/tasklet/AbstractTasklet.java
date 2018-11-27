@@ -50,7 +50,9 @@ abstract class AbstractTasklet implements Tasklet {
             context.setState(INTERRUPTED); // waiting for cancellation
             LOGGER.debug("tasklet {} has been interrupted", id);
         } catch (TaskletException te) {
-            context.setState(ERROR); // waiting for termination
+        //    context.setState(ERROR); // waiting for termination
+        	context.setKillDriver(id);
+        	LOGGER.error("tasklet {} is going to be terminated", id);
             LOGGER.debug("tasklet {} is going to be terminated", id);
         } catch (Exception e) {
             context.setState(ERROR); // waiting for termination

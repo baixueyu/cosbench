@@ -314,10 +314,17 @@ class StageRunner implements StageCallable {
         }
         LOGGER.debug("all {} tasklets have finished execution", num);
         List<String> errIds = new ArrayList<String>();
-        for (TaskContext task : stageContext.getTaskRegistry())
-            if (task.getState().equals(TaskState.ERROR)
-                    || task.getState().equals(TaskState.INTERRUPTED))
-                errIds.add(task.getId());
+        List<String> killDrivers = new ArrayList<String>();
+        for (TaskContext task : stageContext.getTaskRegistry()){
+        	if (task.getState().equals(TaskState.ERROR)
+                    || task.getState().equals(TaskState.INTERRUPTED)){
+        		 errIds.add(task.getId());
+        	}
+             if (task.getKillDriver()!= null && task.getKillDriver().length()>0) {
+            	 killDrivers.add("driver" + task.getKillDriver().substring(1));
+             } 
+             stageContext.setKillDriver(killDrivers);
+        }
         if (errIds.isEmpty())
             return; // all of the tasks are fine
         LOGGER.error("detected tasks {} have encountered errors", errIds);

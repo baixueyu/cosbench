@@ -36,6 +36,7 @@ public class StageContext implements StageInfo {
     private volatile StageState state;
     private StateRegistry stateHistory = new StateRegistry();
     private Stage stage;
+    private List<String> killDriver;
 
     private int interval;
     private transient ScheduleRegistry scheduleRegistry;
@@ -230,6 +231,14 @@ public class StageContext implements StageInfo {
 
 	public void setObjsList(List<List<String>> objsList) {
 		this.objsList = objsList;
+	}
+
+	public List<String> getKillDriver() {
+		return killDriver;
+	}
+
+	public void setKillDriver(List<String> killDriver) {
+		this.killDriver = killDriver;
 	}
 
 }

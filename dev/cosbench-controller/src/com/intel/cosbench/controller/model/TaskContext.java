@@ -34,6 +34,7 @@ public class TaskContext implements TaskInfo {
     private List<String> objs;
     private transient HttpClient httpClient;
     private transient ObjectMapper mapper;
+    private String killDriver;
 
     private String missionId;
     /* The interval that is chosen by the driver */
@@ -160,6 +161,14 @@ public class TaskContext implements TaskInfo {
 
 	public void setObjs(List<String> objs) {
 		this.objs = objs;
+	}
+
+	public String getKillDriver() {
+		return killDriver;
+	}
+
+	public void setKillDriver(String killDriver) {
+		this.killDriver = killDriver;
 	}
 
 }

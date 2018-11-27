@@ -42,12 +42,17 @@ class Querier extends AbstractCommandTasklet<QueryResponse> {
     @Override
     protected void execute() {
         String id = context.getMissionId();
+        int i = 0;
         do {
             sleep();
             try{
             	issueCommand("query", id);
             }catch(Exception tle) {
             	LOGGER.warn("some unexpected exception occurs when ping drivers, but it's ignorable.", tle);
+                i++;
+            }
+            if (i == 5){
+            	break;
             }
         } while (!context.getState().equals(FINISHED));
     }

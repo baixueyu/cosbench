@@ -51,6 +51,8 @@ import com.intel.cosbench.config.XmlConfig;
 import com.intel.cosbench.config.castor.CastorConfigTools;
 import com.intel.cosbench.config.common.KVConfigParser;
 import com.intel.cosbench.controller.model.ControllerContext;
+import com.intel.cosbench.controller.model.DriverContext;
+import com.intel.cosbench.controller.model.DriverRegistry;
 import com.intel.cosbench.controller.model.StageContext;
 import com.intel.cosbench.controller.model.StageRegistry;
 import com.intel.cosbench.controller.model.TaskContext;
@@ -369,6 +371,24 @@ class WorkloadProcessor {
 				executeDelay(stageContext, closuredelay);
 		}
 		LOGGER.info("successfully ran stage {}", id);
+		
+		List<String> killDrivers = new ArrayList<String>();
+		killDrivers = stageContext.getKillDriver();
+		DriverRegistry registryOld = new DriverRegistry();
+		DriverRegistry registryNew = new DriverRegistry();
+		registryOld = controllerContext.getDriverRegistry();
+		DriverContext[] driverContexts = registryOld.getAllDrivers();
+		if (killDrivers!=null && !killDrivers.isEmpty()) {
+			for(int i=0; i<driverContexts.length; i++){
+				for (String killDriver : killDrivers) {
+					if (!killDriver.equals(driverContexts[i].getName())) {
+						registryNew.addDriver(driverContexts[i]);
+					}
+				}
+		    }
+			DriverContext[] test = registryNew.getAllDrivers();
+		    controllerContext.setDriverRegistry(registryNew);
+		} 
 	}
     
 	private void executeDelay(StageContext stageContext, int closuredelay)
