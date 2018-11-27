@@ -201,8 +201,9 @@ class StageRunner implements StageCallable {
             int i = 0;
             int size = objList.size();
             for (TaskContext task : tasks) {
-    			task.getSchedule().getWork().getSync().setObjs(objList.get(i));
-    			i++;
+    		//	task.getSchedule().getWork().getSync().setObjs(objList.get(i));
+    			task.setObjs(objList.get(i));
+            	i++;
     			//the problem of null point
     			if (i == size) {
     				break;

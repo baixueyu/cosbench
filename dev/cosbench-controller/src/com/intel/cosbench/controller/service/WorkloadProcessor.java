@@ -309,7 +309,14 @@ class WorkloadProcessor {
 				 }
 				 marker.put(keyMarker, versionIdMarker);
 			 }
-			
+			if (marker == null || marker.size() < 1) {
+				break;
+			}
+		 }
+		 if (objsList.size() < drivers) {
+			 for (int i = 0; i < drivers-objsList.size(); i++) {
+				 objsList.add(null);
+			 }
 		 }
 		 
 		 //TODO just for test begin

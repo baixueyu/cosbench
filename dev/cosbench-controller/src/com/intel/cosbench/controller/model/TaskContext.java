@@ -18,6 +18,7 @@ limitations under the License.
 package com.intel.cosbench.controller.model;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.http.client.HttpClient;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -30,7 +31,7 @@ public class TaskContext implements TaskInfo {
     private String id;
     private volatile TaskState state;
     private SchedulePlan schedule;
-
+    private List<String> objs;
     private transient HttpClient httpClient;
     private transient ObjectMapper mapper;
 
@@ -152,5 +153,13 @@ public class TaskContext implements TaskInfo {
 	        snapshot = new Snapshot();
     	}
     }
+
+	public List<String> getObjs() {
+		return objs;
+	}
+
+	public void setObjs(List<String> objs) {
+		this.objs = objs;
+	}
 
 }
