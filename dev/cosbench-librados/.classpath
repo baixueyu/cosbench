@@ -12,5 +12,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/cosbench-log"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/cosbench-log4j"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="D:/cosbench/dev/cosbench-s3/ratelimit.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

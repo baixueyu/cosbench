@@ -202,7 +202,7 @@ class MissionHandler {
         if (getType() != null &&  getType().equals("sync")) {
         	//for qos
     		RedisUtil redis = null;
-    		RateLimiter bandthLimiter;
+    		RateLimiter bandthLimiter = null;
     		String bandthQos = "13244:4k";
     		redis = new RedisUtil("10.180.210.55", 6379, "1q2w3e4r!");
     		RateLimiterFactory rateLimiterFactory = new RateLimiterFactory();

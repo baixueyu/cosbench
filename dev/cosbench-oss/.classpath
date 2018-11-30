@@ -10,5 +10,6 @@
 	<classpathentry kind="lib" path="D:/Repository/cosbench-oss-jars/httpclient-4.4.jar"/>
 	<classpathentry kind="lib" path="D:/Repository/cosbench-oss-jars/httpcore-4.4.jar"/>
 	<classpathentry kind="lib" path="D:/Repository/cosbench-oss-jars/jdom-1.1.jar"/>
+	<classpathentry kind="lib" path="D:/cosbench/dev/cosbench-s3/ratelimit.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
