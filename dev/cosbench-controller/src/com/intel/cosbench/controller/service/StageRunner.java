@@ -19,6 +19,10 @@ package com.intel.cosbench.controller.service;
 
 import static com.intel.cosbench.model.StageState.*;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -320,11 +324,28 @@ class StageRunner implements StageCallable {
                     || task.getState().equals(TaskState.INTERRUPTED)){
         		 errIds.add(task.getId());
         	}
-             if (task.getKillDriver()!= null && task.getKillDriver().length()>0) {
-            	 killDrivers.add("driver" + task.getKillDriver().substring(1));
-             } 
-             stageContext.setKillDriver(killDrivers);
+            if (task.getKillDriver()!= null && task.getKillDriver().length()>0) {
+            	 killDrivers.add(task.getKillDriver());
+             try{
+            	 String srcBucketName = task.getSchedule().getWork().getSync().getSrcBucketName();
+            	 File file = new File("log/" + srcBucketName + ".txt");
+             	 if (!file.exists()) {
+              		file.createNewFile();
+                 }  
+             	FileWriter writer = new FileWriter(file, true);
+    			BufferedWriter bWriter = new BufferedWriter(writer);
+    			for (String obj : task.getObjs()) {
+    				bWriter.write(obj);
+    				bWriter.newLine();
+    				bWriter.flush();
+    			}
+    			writer.close();
+            } catch (IOException e){
+            	 e.printStackTrace();
+             }
+          }
         }
+        stageContext.setKillDriver(killDrivers);   
         if (errIds.isEmpty())
             return; // all of the tasks are fine
         LOGGER.error("detected tasks {} have encountered errors", errIds);

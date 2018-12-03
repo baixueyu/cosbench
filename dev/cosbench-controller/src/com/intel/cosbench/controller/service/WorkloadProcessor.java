@@ -218,7 +218,7 @@ class WorkloadProcessor {
                    		Map<String, String> nextMarker = new HashMap<String, String>(1);
                    	 	while (true) {                    	
                        	 	Config config = getSrcStorageConfig(storageConfig);
-                       	 	setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext, syncNum);         
+                       	 	setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext, 100);         
                 			runStage(stageContext);
                        		String key = null;
             				String versionIdMarker = null;
@@ -380,13 +380,11 @@ class WorkloadProcessor {
 		DriverContext[] driverContexts = registryOld.getAllDrivers();
 		if (killDrivers!=null && !killDrivers.isEmpty()) {
 			for(int i=0; i<driverContexts.length; i++){
-				for (String killDriver : killDrivers) {
-					if (!killDriver.equals(driverContexts[i].getName())) {
-						registryNew.addDriver(driverContexts[i]);
-					}
+				if (!killDrivers.contains(driverContexts[i].getName())) {
+					registryNew.addDriver(driverContexts[i]);
 				}
 		    }
-			DriverContext[] test = registryNew.getAllDrivers();
+		//	DriverContext[] test = registryNew.getAllDrivers();
 		    controllerContext.setDriverRegistry(registryNew);
 		} 
 	}

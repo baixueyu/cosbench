@@ -80,7 +80,7 @@ class Submitter extends AbstractCommandTasklet<SubmitResponse> {
         	mission.setType("sync");
         	mission.setState("normal");
         	mission.setStorage(work.getSync().getSyncStorage());
-        	mission.setObjs(work.getSync().getObjs());
+        	mission.setObjs(context.getObjs());
         	mission.setDestBucketName(work.getSync().getDestBucketName());
         	mission.setSrcBucketName(work.getSync().getSrcBucketName());
         } else {
