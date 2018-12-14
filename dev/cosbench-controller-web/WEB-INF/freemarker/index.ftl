@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta http-equiv="refresh" content="60">
+  <meta http-equiv="refresh" content="10">
   <link rel="stylesheet" type="text/css" href="resources/cosbench.css" />
   <script type="text/javascript">
 	function checkAll(event, str) {
@@ -143,6 +143,20 @@
           <td onclick="checkMe('${aInfo.id}','AllActive');">${aInfo.workload.name}</td>
           <td onclick="checkMe('${aInfo.id}','AllActive');">${aInfo.submitDate?datetime}</td>
           <td onclick="checkMe('${aInfo.id}','AllActive');"><span class="workload-state-${aInfo.state?lower_case} state">${aInfo.state?lower_case}</span></td>
+          
+            <#if aInfo.state?lower_case == 'suspend'>
+        		<form id="incrementalForm" method="POST" action="index.html">
+        		<span>Time consuming of this sync: ${aInfo.timeConsuming}<span><br />
+  				<span>Please select the next step:</span>
+  				<br />
+  				<input type="radio" name="nextstep" value="incremental">Incremental Sync<br />
+  				<input type="radio" name="nextstep" value="end">End<br />
+  				<input type="hidden" name="workloadid" value="${aInfo.id}">
+  				<input type="submit" value="Next Step">
+  				<br />
+  				</form>	
+          </#if>
+          
           <td>
             <#if aInfo.state?lower_case == "queuing" >
           	<form id="form-${aInfo.id}" method="POST" align="center" action="index.html">

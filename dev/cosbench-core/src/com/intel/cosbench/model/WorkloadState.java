@@ -24,6 +24,8 @@ public enum WorkloadState {
     QUEUING,
 
     PROCESSING,
+    
+    SUSPEND,
 
     FINISHED,
     
@@ -49,5 +51,9 @@ public enum WorkloadState {
 
     public static boolean isRunning(WorkloadState stage) {
         return PROCESSING.equals(stage);
+    }
+    
+    public static boolean isSuspending(WorkloadState stage){
+    	return SUSPEND.equals(stage);
     }
 }

@@ -59,8 +59,11 @@ public class Mission implements Iterable<Operation> {
     private String type;
     private String state;
 	private boolean bandthQos;
+	private long lastSyncStartTime;
       
-    public Mission() {
+    
+
+	public Mission() {
         /* empty */
     }
     
@@ -85,10 +88,20 @@ public class Mission implements Iterable<Operation> {
         this.destBucketName = m.destBucketName;
         this.objs = m.objs;
         this.type = m.type;
-       
+        this.lastSyncStartTime = m.lastSyncStartTime;
     }
 
 
+    public long getLastSyncStartTime() {
+		return lastSyncStartTime;
+	}
+
+
+	public void setLastSyncStartTime(long lastSyncStartTime) {
+		this.lastSyncStartTime = lastSyncStartTime;
+	}
+
+    
 	public static int getSyncObjFailCount() {
 		return syncObjFailCount;
 	}

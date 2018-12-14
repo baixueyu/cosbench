@@ -23,6 +23,7 @@ import static com.intel.cosbench.model.WorkloadState.CANCELLED;
 import static com.intel.cosbench.model.WorkloadState.FAILED;
 import static com.intel.cosbench.model.WorkloadState.FINISHED;
 import static com.intel.cosbench.model.WorkloadState.PROCESSING;
+import static com.intel.cosbench.model.WorkloadState.SUSPEND;
 import static com.intel.cosbench.model.WorkloadState.QUEUING;
 import static com.intel.cosbench.model.WorkloadState.TERMINATED;
 import static com.intel.cosbench.model.WorkloadState.isStopped;
@@ -159,8 +160,45 @@ class WorkloadProcessor {
                     "workload should be in the state of queuing but " + workloadContext.getState().name());
         String id = workloadContext.getId();
         LOGGER.info("begin to process workload {}", id);
+        long startTime;
+        long timeConsuming;
         try {
-            processWorkload();
+        	workloadContext.setStartDate(new Date());
+        outerLoop:	while (true) {
+            				startTime = System.currentTimeMillis();
+            				System.out.println("本次："+startTime);
+            	           	System.out.println("上次："+workloadContext.getLastSyncStartTime());
+        					processWorkload();
+        					workloadContext.setLastSyncStartTime(startTime);
+        					workloadContext.setState(SUSPEND);
+        					timeConsuming = System.currentTimeMillis() - startTime;
+            				workloadContext.setTimeConsuming(millisToHMS(timeConsuming));
+        					while(true){
+        						if (workloadContext.getIncremental()!=null && workloadContext.getIncremental().length()!=0) {
+        							if (workloadContext.getIncremental().equals("true")) {
+        								
+        								System.out.println("jixu...");
+        								break;
+        							} 
+        							if(workloadContext.getIncremental().equals("false")){
+        								System.out.println("tuichu...");
+        								break outerLoop;
+        							} 
+        						} else {
+        							try{
+        								Thread.sleep(5000);
+        							} catch (Exception e){
+        								System.exit(0);
+        							}
+        						}
+        					}
+        					workloadContext.setIncremental(null);
+        					workloadContext.setTimeConsuming(null);
+        					startTime = 0;
+        					timeConsuming = 0;	
+        			}
+        	workloadContext.setStopDate(new Date());
+        	workloadContext.setState(FINISHED);
         } catch (CancelledException ce) {
             cancelWorkload();
             return;
@@ -186,7 +224,7 @@ class WorkloadProcessor {
      */
     private void processWorkload() throws InterruptedException {
         workloadContext.setState(PROCESSING);
-        workloadContext.setStartDate(new Date());
+      //  workloadContext.setStartDate(new Date());
         Iterator<StageContext> iter = queue.iterator();
         String trigger = workloadContext.getWorkload().getTrigger();
         executeTrigger(trigger, true, workloadContext.getId());
@@ -196,10 +234,11 @@ class WorkloadProcessor {
             if (stageContext.getStage().getName().equals("sync")) {
             	List<Work> works = stageContext.getStage().getWorks();
             	for (Work work : works) {
+            		work.getSync().setLastSyncStartTime(workloadContext.getLastSyncStartTime());
             		String syncStr = work.getConfig();
         			Config syncConfig = KVConfigParser.parse(syncStr);
         			String storageConfig = work.getSync().getSyncStorage().getConfig();
-        			String qosConfig = work.getSync().getQos().getConfig();
+        		//	String qosConfig = work.getSync().getQos().getConfig();
         			int iopsQos = 0;
         			RateLimiter iopsLimiter = null;
         			getQosParmas(iopsQos, iopsLimiter, syncConfig, work);
@@ -218,14 +257,14 @@ class WorkloadProcessor {
             			userSync(storageConfig, work, stageContext, syncNum, iopsQos, iopsLimiter);	                 			         			     	               	 	               	
                 	}
             	}
-            	iter.remove();
+            //	iter.remove();
             } else {
             	 iter.remove();
                  runStage(stageContext);
             }          
         }
         executeTrigger(trigger, false, workloadContext.getId());
-        workloadContext.setStopDate(new Date());
+     //   workloadContext.setStopDate(new Date());
         workloadContext.setCurrentStage(null);
         workloadContext.mergeErrorStatistics();
 		for (StageContext stageContext : workloadContext.getStageRegistry()
@@ -235,7 +274,7 @@ class WorkloadProcessor {
 				return;
 			}
 		}
-        workloadContext.setState(FINISHED);
+   //     workloadContext.setState(FINISHED);
     }
 
 	private void userSync(String storageConfig, Work work,
@@ -455,13 +494,11 @@ class WorkloadProcessor {
 		DriverContext[] driverContexts = registryOld.getAllDrivers();
 		if (killDrivers!=null && !killDrivers.isEmpty()) {
 			for(int i=0; i<driverContexts.length; i++){
-				for (String killDriver : killDrivers) {
-					if (!killDriver.equals(driverContexts[i].getName())) {
-						registryNew.addDriver(driverContexts[i]);
-					}
+				if (!killDrivers.contains(driverContexts[i].getName())) {
+					registryNew.addDriver(driverContexts[i]);
 				}
 		    }
-			DriverContext[] test = registryNew.getAllDrivers();
+		//	DriverContext[] test = registryNew.getAllDrivers();
 		    controllerContext.setDriverRegistry(registryNew);
 		} 
 	}

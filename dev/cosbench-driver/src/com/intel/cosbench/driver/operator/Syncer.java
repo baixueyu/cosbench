@@ -1,5 +1,9 @@
 package com.intel.cosbench.driver.operator;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
@@ -155,26 +159,50 @@ public class Syncer extends AbstractOperator {
         try {
         	List<String> upload_id = new ArrayList<String>(1); 
             List<Object> partETags = new ArrayList<Object>();
+            long lastSyncStartTime = session.getWorkContext().getMission().getLastSyncStartTime();
+            System.out.println("get last start time:" + lastSyncStartTime);
         	int i = 0;
-        	do {
-        		int result = session.getWorkContext().getDestStorageApi().syncObject(destBucketName,srcBucketName, objectName, cin, objSize.get(0), upload_id, partETags, versionId, session.getApi(), config, rateLimiter);
-        	    System.out.println(objectName + "已上传" + (i + 1) + "次");
-        		if (result == 0) {
-        			System.out.println(objectName + "第" + (i + 1) + "次上传后成功");
-        			doLogInfo(session.getLogger(), objectName + "第" + (i + 1) + "次上传后成功");
-        			break;
-        	    } else {
-        	    	IOUtils.closeQuietly(cin);
-        		    in = session.getApi().getObject(srcBucketName, objectName, versionId, objSize, config);
-        		    cin = new XferCountingInputStream(in);
-        		    i++;
-        		    System.out.println(objectName + "第" + i + "次上传后失败");
-        	    }		
-         	} while (i < 5);
+        	boolean need = session.getWorkContext().getDestStorageApi().needSyncOrNot(destBucketName, srcBucketName, objectName, lastSyncStartTime, session.getApi(), versionId);
+        	if(!need){
+        		System.out.println(objectName + "已存在于目的桶，本次同步跳过");
+        		doLogInfo(session.getLogger(), objectName + "已存在于目的桶，本次同步跳过");
+        	} else {
+        		do {
+        			int result = session.getWorkContext().getDestStorageApi().syncObject(destBucketName,srcBucketName, objectName, cin, objSize.get(0), upload_id, partETags, versionId, session.getApi(), config, rateLimiter);
+        			System.out.println(objectName + "已上传" + (i + 1) + "次");
+        			if (result == 0) {
+        				System.out.println(objectName + "第" + (i + 1) + "次上传后成功");
+        				doLogInfo(session.getLogger(), objectName + "第" + (i + 1) + "次上传后成功");
+        				break;
+        			} else {
+        				IOUtils.closeQuietly(cin);
+        				in = session.getApi().getObject(srcBucketName, objectName, versionId, objSize, config);
+        				cin = new XferCountingInputStream(in);
+        				i++;
+        				System.out.println(objectName + "第" + i + "次上传后失败");
+        			}		
+        		} while (i < 5);
+        	}
         	if (i == 5) {
         		succ = false;
         		Mission.setSyncObjFailCount(1); 			
         		doLogWarn(session.getLogger(), "/" + srcBucketName + "/" + objectName + " 同步失败");
+        		//将同步失败的对象记录到相应的文件中
+        		try{
+               	 	File file = new File("log/" + srcBucketName + ".txt");
+                	if (!file.exists()) {
+                 		file.createNewFile();
+                    }  
+                	FileWriter writer = new FileWriter(file, true);
+                	BufferedWriter bWriter = new BufferedWriter(writer);
+                	bWriter.write("/" + srcBucketName + "/" + objectName);
+                	bWriter.newLine();
+                	bWriter.flush();
+                	bWriter.close();
+                	writer.close();
+               } catch (IOException e){
+               	 e.printStackTrace();
+                }
         	}
         	if (Mission.getSyncObjFailCount() >= 100) {
         		doLogErr(session.getLogger(), "数据同步失败到达极限，退出本次任务");

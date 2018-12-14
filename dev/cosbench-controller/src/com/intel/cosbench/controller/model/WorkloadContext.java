@@ -41,6 +41,9 @@ public class WorkloadContext implements WorkloadInfo {
     private StageRegistry stageRegistry;
     private int order; /* workload order */
     private DriverRegistry driverRegistry;
+    private String incremental = null;
+    private String timeConsuming;
+    private long lastSyncStartTime = 0L;
 
     /* Report will be available after the workload is finished */
     private volatile Report report = null; // will be merged from stage reports
@@ -334,5 +337,29 @@ public class WorkloadContext implements WorkloadInfo {
     public DriverInfo[] getDriverInfos() {
         return driverRegistry.getAllDrivers();
     }
+
+	public String getIncremental() {
+		return incremental;
+	}
+
+	public void setIncremental(String incremental) {
+		this.incremental = incremental;
+	}
+
+	public String getTimeConsuming() {
+		return timeConsuming;
+	}
+
+	public void setTimeConsuming(String timeConsuming) {
+		this.timeConsuming = timeConsuming;
+	}
+
+	public long getLastSyncStartTime() {
+		return lastSyncStartTime;
+	}
+
+	public void setLastSyncStartTime(long lastSyncStartTime) {
+		this.lastSyncStartTime = lastSyncStartTime;
+	}
 
 }

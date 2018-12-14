@@ -10,6 +10,7 @@ public class Sync {
     private String srcBucketName;
     private String destBucketName;
     private List<String> objs;
+    private long lastSyncStartTime;
     
 	public Storage getSyncStorage() {
 		return storage;
@@ -41,6 +42,12 @@ public class Sync {
 	}
 	public void setObjs(List<String> objs) {
 		this.objs = objs;
+	}
+	public long getLastSyncStartTime() {
+		return lastSyncStartTime;
+	}
+	public void setLastSyncStartTime(long lastSyncStartTime) {
+		this.lastSyncStartTime = lastSyncStartTime;
 	}
 
 	

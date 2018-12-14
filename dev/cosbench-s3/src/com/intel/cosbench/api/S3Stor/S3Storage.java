@@ -15,6 +15,7 @@ import static com.intel.cosbench.client.S3Stor.S3Constants.PROXY_PORT_KEY;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -352,6 +353,40 @@ public class S3Storage extends NoneStorage {
 		}
 	}
 
+	/**
+	 * 同步前判断
+	 * 获取上次同步的起始时间及源桶中对象的上次修改时间
+	 * 若该对象的上次修改时间<上次同步的起始时间，则说明该对象在上次同步期间未被修改，不再同步
+	 * 对于上次同步期间未被修改又未同步成功的对象，存储到本地，最后单独处理
+	 * 若对象的上次修改时间>=上次同步的起始时间，则说明上次同步期间肯定被修改了，则无需做其他判断，直接同步即可
+	 * @return true 需要同步，  false 不需要同步
+	 */
+	@Override
+	public boolean needSyncOrNot(String container, String srcContainer, String object, long lastSyncStartTime, StorageAPI srcS3Storage, String versionId){		
+		S3Storage s3 = (S3Storage) srcS3Storage;
+		AmazonS3 srcClient = s3.getClient();
+		ObjectMetadata metadata = srcClient.getObjectMetadata(new GetObjectMetadataRequest(srcContainer, object, versionId));
+		Date lastModiDate = metadata.getLastModified();
+		long lastModiMills = lastModiDate.getTime(); 
+		System.out.println("get last modi time Date:" + object + " " + lastModiDate);
+		System.out.println("get last modi time millsec:" + object + " " + lastModiMills);
+		 
+		
+		//如果上次同步起始时间为0，说明是第一次同步，则对所有对象执行同步
+		if (lastSyncStartTime == 0) {
+			return true;
+		 }
+		else {
+		    if (lastModiMills < lastSyncStartTime) {
+		    	return false;
+		    }
+		    else {
+		    	return true;
+		    } 
+		}
+	}
+	
+	
 	@Override
 	public int syncObject(String container, String srcContainer, String object, InputStream data, long content_length, List<String> upload_id,
 			List<Object> partETags, String versionId, StorageAPI srcS3Storage, Config config, RateLimiter ratelimiter) {

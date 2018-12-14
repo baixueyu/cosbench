@@ -386,4 +386,13 @@ class COSBControllerService implements ControllerService, WorkloadListener {
         return archiver.getWorkloadConfig(info);
     }
 
+    @Override
+    public void incrementalSync(String workloadid, Boolean flag){
+    	if (flag) {
+    		processors.get(workloadid).getWorkloadContext().setIncremental("true");
+    	} else {
+    		processors.get(workloadid).getWorkloadContext().setIncremental("false");
+    	}
+    	
+    }
 }

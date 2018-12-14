@@ -53,6 +53,13 @@ public class IndexPageController extends AbstractController {
 		String resubmitIds = req.getParameter("resubmitIds");
 		String resubmit = req.getParameter("resubmit");
 		String loadArch = req.getParameter("loadArch");
+		String nextStep = req.getParameter("nextstep");
+		if (!StringUtils.isEmpty(nextStep) && nextStep.equals("end")){
+			controller.incrementalSync(req.getParameter("workloadid"), false);
+		} else if(!StringUtils.isEmpty(nextStep) && nextStep.equals("incremental")){
+			controller.incrementalSync(req.getParameter("workloadid"), true);
+			
+		}
 		if (!StringUtils.isEmpty(id) && !StringUtils.isEmpty(up)) {
 			boolean isUp = up.equalsIgnoreCase("yes") ? true : false;
 			boolean changeOrderOk = controller.changeOrder(id, neighId,

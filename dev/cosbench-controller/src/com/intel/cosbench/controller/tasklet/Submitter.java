@@ -84,6 +84,7 @@ class Submitter extends AbstractCommandTasklet<SubmitResponse> {
         	mission.setDestBucketName(work.getSync().getDestBucketName());
         	mission.setSrcBucketName(work.getSync().getSrcBucketName());
         	mission.setBandthQos(work.getBandthQos());
+        	mission.setLastSyncStartTime(work.getSync().getLastSyncStartTime());
         } else {
         	mission.setStorage(work.getStorage());
         }

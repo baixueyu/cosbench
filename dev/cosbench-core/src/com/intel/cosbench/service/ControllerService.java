@@ -60,5 +60,7 @@ public interface ControllerService {
     public boolean getloadArch();
     
     public void setloadArch(boolean loadArch);
+    
+    public void incrementalSync(String workloadid, Boolean flag);
 
 }

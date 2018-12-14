@@ -156,6 +156,10 @@ public class NoneStorage implements StorageAPI {
     	return 0;
     }
     
+    @Override
+    public boolean needSyncOrNot(String container, String srcContainer, String object, long lastSyncStartTime, StorageAPI srcS3Storage, String versionId){
+    	return false;
+    }
    
     protected void createMetadata(String container, String object,
             Map<String, String> map, Config config) {

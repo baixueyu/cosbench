@@ -89,7 +89,9 @@
 		<field name="bandthQos" type="boolean">
 			<bind-xml name="bandthQos" node="attribute" />
 		</field>
-		
+		<field name="lastSyncStartTime" type="long">
+			<bind-xml name="lastSyncStartTime" node="element" />
+		</field>
 	</class>
 
 </mapping>
