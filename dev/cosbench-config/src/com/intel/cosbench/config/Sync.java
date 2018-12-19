@@ -11,6 +11,7 @@ public class Sync {
     private String destBucketName;
     private List<String> objs;
     private long lastSyncStartTime;
+    private String configurationSync;
     
 	public Storage getSyncStorage() {
 		return storage;
@@ -50,5 +51,10 @@ public class Sync {
 		this.lastSyncStartTime = lastSyncStartTime;
 	}
 
-	
+	public String getConfigurationSync() {
+		return configurationSync;
+	}
+	public void setConfigurationSync(String configurationSync) {
+		this.configurationSync = configurationSync;
+	}
 }

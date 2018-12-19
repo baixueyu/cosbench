@@ -99,7 +99,8 @@ public class Syncer extends AbstractOperator {
     	RateLimiter rateLimiter = session.getWorkContext().getRatelimiter();
     	//TODO destBucketName exist?  begin
     	try {
-    		session.getWorkContext().getDestStorageApi().createContainer(destBucketName, srcBucketName, session.getApi(), config);
+    		session.getWorkContext().getDestStorageApi().createContainer(destBucketName, srcBucketName, session.getApi(), session.getWorkContext().getMission()
+    				.getConfigurationSync(), config);
     	} catch (Exception e) {
     		syncException(e, session);
         	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);      

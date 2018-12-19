@@ -216,6 +216,15 @@ class WorkloadProcessor {
         workloadContext.logErrorStatistics(LOGGER);
         LOGGER.info("sucessfully processed workload {}", id);
     }
+    
+    private String configurationSyncMerge(){
+    	StringBuilder str = new StringBuilder();
+    	str.append(controllerContext.getBucket_policy());
+    	str.append(controllerContext.getBucket_lifecycle_configuration());
+    	str.append(controllerContext.getBucket_cross_origin_configuration());
+    	str.append(controllerContext.getBucket_website_configuration());
+    	return str.toString();
+    }
 
     /*
      * There is a small window when the workload is 'PROCESSING' but there is no
@@ -234,6 +243,7 @@ class WorkloadProcessor {
             if (stageContext.getStage().getName().equals("sync")) {
             	List<Work> works = stageContext.getStage().getWorks();
             	for (Work work : works) {
+            		work.getSync().setConfigurationSync(configurationSyncMerge());
             		work.getSync().setLastSyncStartTime(workloadContext.getLastSyncStartTime());
             		String syncStr = work.getConfig();
         			Config syncConfig = KVConfigParser.parse(syncStr);

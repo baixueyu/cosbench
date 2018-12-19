@@ -26,5 +26,13 @@ public interface ControllerInfo {
     public int getDriverCount();
 
     public DriverInfo[] getDriverInfos();
+    
+    public String getBucket_policy();
+    
+    public String getBucket_lifecycle_configuration();
+    
+    public String getBucket_cross_origin_configuration();
+    
+    public String getBucket_website_configuration();
 
 }

@@ -120,6 +120,19 @@
   	<p/>
   </div>
   
+  <div>
+    <#if cInfo.bucket_policy == "0" && cInfo.bucket_lifecycle_configuration == "0" && 
+    cInfo.bucket_cross_origin_configuration == "0" && cInfo.bucket_website_configuration == "0">
+      <p class="label"><strong>You have not chosen to sync any configurations yet!</strong></p>
+    <#else>
+   	  <p class="label"><strong>You have chosen to sync these configurations:</strong></p>
+    </#if> 
+      <#if cInfo.bucket_policy == "1"><span>bucket_policy</span><p/></#if>
+      <#if cInfo.bucket_lifecycle_configuration == "1"><span>bucket_lifecycle_configuration</span><p/></#if>
+      <#if cInfo.bucket_cross_origin_configuration == "1"><span>bucket_cross_origin_configuration</span><p/></#if>
+      <#if cInfo.bucket_website_configuration == "1"><span>bucket_website_configuration</span><p/></#if>
+  </div>
+  
   <h3>Active Workloads  <span class="counter state">${aInfos?size}</span></h3>
   <div>
     <table class="info-table">

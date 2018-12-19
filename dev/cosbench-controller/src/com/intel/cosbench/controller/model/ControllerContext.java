@@ -32,6 +32,10 @@ public class ControllerContext implements ControllerInfo {
     private String archive_dir;
     private int concurrency;
     private DriverRegistry driverRegistry;
+    private String bucket_policy;
+    private String bucket_lifecycle_configuration;
+    private String bucket_cross_origin_configuration;
+    private String bucket_website_configuration;
 
     public ControllerContext() {
         /* empty */
@@ -88,5 +92,41 @@ public class ControllerContext implements ControllerInfo {
     public DriverInfo[] getDriverInfos() {
         return driverRegistry.getAllDrivers();
     }
+    
+    public String getBucket_policy() {
+		return bucket_policy;
+	}
+
+	public void setBucket_policy(String bucket_policy) {
+		this.bucket_policy = bucket_policy;
+	}
+
+	public String getBucket_lifecycle_configuration() {
+		return bucket_lifecycle_configuration;
+	}
+
+	public void setBucket_lifecycle_configuration(
+			String bucket_lifecycle_configuration) {
+		this.bucket_lifecycle_configuration = bucket_lifecycle_configuration;
+	}
+
+	public String getBucket_cross_origin_configuration() {
+		return bucket_cross_origin_configuration;
+	}
+
+	public void setBucket_cross_origin_configuration(
+			String bucket_cross_origin_configuration) {
+		this.bucket_cross_origin_configuration = bucket_cross_origin_configuration;
+	}
+
+	public String getBucket_website_configuration() {
+		return bucket_website_configuration;
+	}
+
+	public void setBucket_website_configuration(
+			String bucket_website_configuration) {
+		this.bucket_website_configuration = bucket_website_configuration;
+	}
+
 
 }

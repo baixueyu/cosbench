@@ -76,6 +76,10 @@ public class COSBControllerServiceFactory extends AbstractServiceFactory
         context.setArchive_dir(loadArchiveDir());
         context.setConcurrency(loadConcurrency());
         context.setDriverRegistry(getDriverRegistry());
+        context.setBucket_policy(loadBucketPolicy());
+        context.setBucket_lifecycle_configuration(loadBucketLifecycleConfiguration());
+        context.setBucket_cross_origin_configuration(loadBucketCrossOriginConfiguration());
+        context.setBucket_website_configuration(loadBucketWebsiteConfiguration());
         return context;
     }
 
@@ -101,6 +105,22 @@ public class COSBControllerServiceFactory extends AbstractServiceFactory
 
     private int loadConcurrency() {
         return config.getInt("controller.concurrency", 1);
+    }
+    
+    private String loadBucketPolicy() {
+    	return config.get("controller.bucket_policy");
+    }
+    
+    private String loadBucketLifecycleConfiguration() {
+    	return config.get("controller.bucket_lifecycle_configuration");
+    }
+    
+    private String loadBucketCrossOriginConfiguration() {
+    	return config.get("controller.bucket_cross_origin_configuration");
+    }
+    
+    private String loadBucketWebsiteConfiguration() {
+    	return config.get("controller.bucket_website_configuration");
     }
 
     private DriverRegistry getDriverRegistry() {

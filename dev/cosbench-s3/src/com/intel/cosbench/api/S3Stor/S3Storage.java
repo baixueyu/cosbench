@@ -30,8 +30,16 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.BucketCrossOriginConfiguration;
+import com.amazonaws.services.s3.model.BucketLifecycleConfiguration;
+import com.amazonaws.services.s3.model.BucketPolicy;
 import com.amazonaws.services.s3.model.BucketVersioningConfiguration;
+import com.amazonaws.services.s3.model.BucketWebsiteConfiguration;
 import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
+import com.amazonaws.services.s3.model.GetBucketCrossOriginConfigurationRequest;
+import com.amazonaws.services.s3.model.GetBucketLifecycleConfigurationRequest;
+import com.amazonaws.services.s3.model.GetBucketPolicyRequest;
+import com.amazonaws.services.s3.model.GetBucketWebsiteConfigurationRequest;
 import com.amazonaws.services.s3.model.GetObjectMetadataRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
@@ -47,6 +55,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.S3VersionSummary;
+import com.amazonaws.services.s3.model.SetBucketPolicyRequest;
 import com.amazonaws.services.s3.model.SetBucketVersioningConfigurationRequest;
 import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.model.UploadPartResult;
@@ -188,7 +197,7 @@ public class S3Storage extends NoneStorage {
 
 	@Override
 	public void createContainer(String container, String srcContainer,
-			StorageAPI srcS3Storage, Config config) {
+			StorageAPI srcS3Storage, String configurationSync, Config config) {
 		try {
 			S3Storage s3 = (S3Storage) srcS3Storage;
 			AmazonS3 srcClient = s3.getClient();
@@ -218,6 +227,41 @@ public class S3Storage extends NoneStorage {
 			    client.setBucketVersioningConfiguration(new SetBucketVersioningConfigurationRequest(
 						container, srcVersionConfig));
 			}
+		   
+		 //桶策略同步	
+		   if (configurationSync.charAt(0)== '1') {
+			   BucketPolicy srcBucketPolicy = srcClient.getBucketPolicy(new GetBucketPolicyRequest(srcContainer));
+			   if (srcBucketPolicy.getPolicyText() != null && srcBucketPolicy.getPolicyText().length() != 0) {
+				   client.setBucketPolicy(new SetBucketPolicyRequest(container, srcBucketPolicy.getPolicyText()));
+			   }
+		   }
+		 
+		 
+		 //生命周期
+		   if (configurationSync.charAt(1)== '1') {
+			   BucketLifecycleConfiguration srcBucketLifecycleConfiguration = srcClient.getBucketLifecycleConfiguration(new GetBucketLifecycleConfigurationRequest(srcContainer));
+			   if (srcBucketLifecycleConfiguration != null) {
+				   client.setBucketLifecycleConfiguration(container, srcBucketLifecycleConfiguration);
+			   }
+		   }
+		  
+		  
+		 //跨域资源共享CORS
+		   if (configurationSync.charAt(2)== '1') {
+			   BucketCrossOriginConfiguration srcBucketCrossOriginConfiguration = srcClient.getBucketCrossOriginConfiguration(new GetBucketCrossOriginConfigurationRequest(srcContainer));
+			   if (srcBucketCrossOriginConfiguration != null) {
+				   client.setBucketCrossOriginConfiguration(container, srcBucketCrossOriginConfiguration);
+			   }
+		   }
+		  
+		  
+		  //静态网站托管Website
+		   if (configurationSync.charAt(3)== '1') {
+			   BucketWebsiteConfiguration srcBucketWebsiteConfiguration = srcClient.getBucketWebsiteConfiguration(new GetBucketWebsiteConfigurationRequest(srcContainer));
+			   if (srcBucketWebsiteConfiguration != null) {
+				   client.setBucketWebsiteConfiguration(container, srcBucketWebsiteConfiguration);
+			   }
+		   }
 			
 		} catch (Exception e) {
 			throw new StorageException(e);

@@ -60,7 +60,7 @@ public class Mission implements Iterable<Operation> {
     private String state;
 	private boolean bandthQos;
 	private long lastSyncStartTime;
-      
+	private String configurationSync; 
     
 
 	public Mission() {
@@ -89,9 +89,17 @@ public class Mission implements Iterable<Operation> {
         this.objs = m.objs;
         this.type = m.type;
         this.lastSyncStartTime = m.lastSyncStartTime;
+        this.configurationSync = m.configurationSync;
     }
 
-
+    public String getConfigurationSync() {
+		return configurationSync;
+	}
+    
+    public void setConfigurationSync(String configurationSync) {
+		this.configurationSync = configurationSync;
+	}
+    
     public long getLastSyncStartTime() {
 		return lastSyncStartTime;
 	}
