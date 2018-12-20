@@ -5,6 +5,25 @@ Bundle-SymbolicName: cosbench-controller
 Bundle-Version: 0.4.1.0
 Bundle-Vendor: intel
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ClassPath: .,
+ guava-18.0.jar,
+ spring-beans-3.0.7.jar,
+ jedis-2.4.2.jar,
+ spring-dao-2.0.8.jar,
+ spring-data-redis-1.6.2.RELEASE.jar,
+ jackson-annotations-2.5.0.jar,
+ jackson-core-2.5.3.jar,
+ jackson-core-asl-1.8.7.jar,
+ jackson-databind-2.5.3.jar,
+ jackson-dataformat-cbor-2.5.3.jar,
+ jackson-mapper-asl-1.8.7.jar,
+ commons-pool2-2.0.jar,
+ spring-context-3.0.7.jar,
+ spring-core-3.0.7.jar,
+ commons-logging-1.2.jar,
+ ratelimit.jar,
+ com.springsource.org.aopalliance-1.0.0.jar,
+ org.springframework.aop-3.0.5.RELEASE.jar
 Import-Package: 
  com.intel.cosbench.api.S3Stor,
  com.intel.cosbench.api.storage,
@@ -29,3 +48,5 @@ Import-Package:
  org.apache.http.util;version="[4.1.0,5.0.0)",
  org.codehaus.jackson;version="[1.4.2,2.0.0)",
  org.codehaus.jackson.map;version="[1.4.2,2.0.0)"
+
+

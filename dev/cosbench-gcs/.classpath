@@ -5,7 +5,6 @@
 	<classpathentry exported="true" kind="lib" path="google-http-client-1.19.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="google-http-client-jackson2-1.19.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="google-oauth-client-1.19.0.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry exported="true" kind="lib" path="commons-codec-1.3.jar"/>
 	<classpathentry exported="true" kind="lib" path="commons-logging-1.1.1.jar"/>
@@ -16,6 +15,9 @@
 	<classpathentry exported="true" kind="lib" path="jackson-core-2.1.3.jar"/>
 	<classpathentry exported="true" kind="lib" path="jsr305-1.3.9.jar"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="D:/cosbench/dev/cosbench-s3/ratelimit.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-s3/ratelimit.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/org.apache.httpcomponents.httpclient_4.1.3.jar"/>
+	<classpathentry kind="lib" path="D:/Program Files (x86)/Git/cosbench/dist/osgi/libs/org.apache.httpcomponents.httpcore_4.1.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

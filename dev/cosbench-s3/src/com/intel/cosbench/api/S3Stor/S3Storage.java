@@ -433,26 +433,30 @@ public class S3Storage extends NoneStorage {
 	
 	@Override
 	public int syncObject(String container, String srcContainer, String object, InputStream data, long content_length, List<String> upload_id,
-			List<Object> partETags, String versionId, StorageAPI srcS3Storage, Config config, RateLimiter ratelimiter) {
-		// super.createObject(container, object, data, length, config);
-		super.syncObject(container, srcContainer, object, data, content_length, upload_id, partETags, versionId, srcS3Storage, config, ratelimiter);
+			List<Object> partETags, String versionId, StorageAPI srcS3Storage, Config config, RateLimiter ratelimiter, String bandthQos) {
+		super.syncObject(container, srcContainer, object, data, content_length, upload_id, partETags, versionId, srcS3Storage, config, ratelimiter, bandthQos);
 		long part_size = 15 * 1024 * 1024;
 		int success = 0;;
 		try {
 			if (content_length < part_size) {
 				S3Storage s3 = (S3Storage) srcS3Storage;
 				AmazonS3 srcClient = s3.getClient();
-				// srcClient.getObjectAcl(srcContainer, object);
 				ObjectMetadata metadata = srcClient.getObjectMetadata(new GetObjectMetadataRequest(srcContainer, object, versionId));
 				PutObjectRequest request = new PutObjectRequest(container, object, data, metadata);
 				request.getRequestClientOptions().setReadLimit(15728640); // 15MB
+				// bandthQos 暂不支持
+				/*
+				request.setRateLimiter(ratelimiter);
+				request.getRequestClientOptions().setQos(bandthQos);
+				*/
 				client.putObject(request);
 				// TODO ACL need to consider
 				// AccessControlList acl = srcClient.getObjectAcl(srcContainer,
 				// object);
 				// client.setObjectAcl(container, object, versionId, acl);
 			} else {
-				success = syncMultipartObject(container, data, object, content_length, upload_id, partETags, part_size, srcS3Storage, srcContainer, versionId);
+				success = syncMultipartObject(container, data, object, content_length, upload_id, partETags, part_size, srcS3Storage, srcContainer, versionId,
+						ratelimiter, bandthQos);
 			}
 		} catch (Exception e) {
 			success --;
@@ -473,10 +477,12 @@ public class S3Storage extends NoneStorage {
 	 * @param srcS3Storage
 	 * @param srcContainer 源桶名
 	 * @param versionId
+	 * @param bandthQos 
+	 * @param ratelimiter 
 	 * @return
 	 */
 	public int syncMultipartObject(String bucket_name, InputStream in, String key_name, long content_length, List<String> upload_id,
-			List<Object> partETags, long part_size, StorageAPI srcS3Storage, String srcContainer, String versionId) {
+			List<Object> partETags, long part_size, StorageAPI srcS3Storage, String srcContainer, String versionId, RateLimiter rateLimiter, String bandthQos) {
 		List<PartSummary> remote_parts = new ArrayList<PartSummary>();
 		try {
 			if (null == upload_id || upload_id.size() <= 0) {
@@ -484,7 +490,7 @@ public class S3Storage extends NoneStorage {
 			} else {
 				remote_parts = get_parts_information(bucket_name, key_name, upload_id);
 			}
-			upload_all_part(bucket_name, in, key_name, content_length, upload_id, remote_parts, partETags, part_size);
+			upload_all_part(bucket_name, in, key_name, content_length, upload_id, remote_parts, partETags, part_size, rateLimiter, bandthQos);
 			complete_multipart_upload(bucket_name, key_name, upload_id, partETags);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -541,15 +547,17 @@ public class S3Storage extends NoneStorage {
 	 * @param flag
 	 * @param partETags
 	 * @param part_size
+	 * @param bandthQos 
+	 * @param rateLimiter 
 	 * @return
 	 */
 	public int upload_all_part(String bucket_name, InputStream in, String key_name, long content_length, List<String> upload_id,
-			List<PartSummary> remote_parts, List<Object> partETags, long part_size) {
+			List<PartSummary> remote_parts, List<Object> partETags, long part_size, RateLimiter rateLimiter, String bandthQos) {
 		int seq = 0;
 		long file_position = 0;
 		for ( ; file_position < content_length; ) {
 			part_size = Math.min(part_size, content_length - file_position);
-			upload_part(bucket_name, in, key_name, part_size, seq, remote_parts, upload_id, partETags);
+			upload_part(bucket_name, in, key_name, part_size, seq, remote_parts, upload_id, partETags, rateLimiter, bandthQos);
 			file_position += part_size;
 			seq += 1;
 		}
@@ -566,10 +574,12 @@ public class S3Storage extends NoneStorage {
 	 * @param remote_parts
 	 * @param upload_id
 	 * @param partETags
+	 * @param bandthQos 
+	 * @param rateLimiter 
 	 * @return
 	 */
 	public int upload_part(String bucket_name, InputStream in, String key_name, long part_size, int seq, List<PartSummary> remote_parts,
-			List<String> upload_id, List<Object> partETags) {
+			List<String> upload_id, List<Object> partETags, RateLimiter rateLimiter, String bandthQos) {
 		PartSummary remote_part = null;
 		if (remote_parts.size() > seq) {
 			remote_part = remote_parts.get(seq);
@@ -597,6 +607,11 @@ public class S3Storage extends NoneStorage {
 				.withInputStream(in)
 				.withPartSize(part_size);
 		upload_request.getRequestClientOptions().setReadLimit(15728640); // 15MB
+		// bandthQos暂不支持
+		/*
+		upload_request.withRateLimiter(rateLimiter);
+		upload_request.getRequestClientOptions().setQos(bandthQos);
+		*/
 		UploadPartResult upload_response = client.uploadPart(upload_request);
 		partETags.add(upload_response.getPartETag());
 		System.out.println(key_name + "第" + (seq + 1) + "片上传成功");

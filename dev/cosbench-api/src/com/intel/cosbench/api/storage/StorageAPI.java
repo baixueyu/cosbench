@@ -183,7 +183,7 @@ public interface StorageAPI {
 	public void syncObject(String destBucketName, String objectName,
 			InputStream in, long objSize, Config config);
 	public int syncObject(String container, String srcContainer, String object, InputStream data,
-			long content_length, List<String> upload_id, List<Object> partETags, String versionId, StorageAPI  srcS3Storage, Config config, RateLimiter rateLimiter);
+			long content_length, List<String> upload_id, List<Object> partETags, String versionId, StorageAPI  srcS3Storage, Config config, RateLimiter rateLimiter, String bandthQos);
 	public boolean needSyncOrNot(String container, String srcContainer, String object, long lastSyncStartTime, StorageAPI srcS3Storage, String versionId);
 
 }

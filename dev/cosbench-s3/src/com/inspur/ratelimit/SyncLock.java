@@ -202,6 +202,11 @@ class SyncLock {
      * @see [tryLock]
      */
     void unLock() {
+    	stringRedisTemplate.afterPropertiesSet();
+    	Boolean hasKey = stringRedisTemplate.hasKey(key);
+    	if (hasKey) {
+    		String value = stringRedisTemplate.opsForValue().get(key);
+    	}
        String iter =  stringRedisTemplate.opsForValue().get(getKey());
        if (iter != null && iter.equals(getValue())) {
            stringRedisTemplate.delete(key);

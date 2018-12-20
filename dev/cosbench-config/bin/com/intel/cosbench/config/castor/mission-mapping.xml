@@ -86,8 +86,8 @@
 		<field name="state" type="string">
 			<bind-xml name="state" node="attribute" />
 		</field>
-		<field name="bandthQos" type="boolean">
-			<bind-xml name="bandthQos" node="attribute" />
+		<field name="qos" type="com.intel.cosbench.config.Qos">
+			<bind-xml name="qos" node="element" />
 		</field>
 		<field name="lastSyncStartTime" type="long">
 			<bind-xml name="lastSyncStartTime" node="element" />
