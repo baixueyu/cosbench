@@ -248,10 +248,10 @@ class WorkloadProcessor {
             		String syncStr = work.getConfig();
         			Config syncConfig = KVConfigParser.parse(syncStr);
         			String storageConfig = work.getSync().getSyncStorage().getConfig();
-        		//	String qosConfig = work.getSync().getQos().getConfig();
-        			int iopsQos = 0;
-        			RateLimiter iopsLimiter = null;
-        			getQosParmas(iopsQos, iopsLimiter, syncConfig, work);
+        			Config qosConfig = KVConfigParser.parse(work.getSync().getQos().getConfig());
+        			List<RateLimiter> iopsLimiter = new ArrayList<RateLimiter>();
+        			ArrayList<Integer> iopsQos = new ArrayList<Integer>();
+        			getQosParmas(iopsQos, iopsLimiter, qosConfig, work);
         			int syncNum;
         			try {
         				syncNum = syncConfig.getInt("syncNum");
@@ -288,8 +288,8 @@ class WorkloadProcessor {
     }
 
 	private void userSync(String storageConfig, Work work,
-			StageContext stageContext, int syncNum, int iopsQos,
-			RateLimiter iopsLimiter) throws InterruptedException {
+			StageContext stageContext, int syncNum, ArrayList<Integer> iopsQos,
+			List<RateLimiter> iopsLimiter) throws InterruptedException {
 		// TODO Auto-generated method stub
 		Config config = getSrcStorageConfig(storageConfig);
 		List<String> buckets = new ArrayList<String>();
@@ -316,8 +316,8 @@ class WorkloadProcessor {
 	}
 
 	private void bucketSync(Config syncConfig, String storageConfig, Work work,
-			StageContext stageContext, int syncNum, int iopsQos,
-			RateLimiter iopsLimiter) throws InterruptedException {
+			StageContext stageContext, int syncNum, ArrayList<Integer> iopsQos,
+			List<RateLimiter> iopsLimiter) throws InterruptedException {
 		// TODO Auto-generated method stub
 		String srcBucket = syncConfig.get("srcBucket");
    	 	String destBucket = syncConfig.get("destBucket"); 
@@ -342,45 +342,66 @@ class WorkloadProcessor {
    	 	}     	
 	}
 
-	private void getQosParmas(int iopsQos, RateLimiter iopsLimiter, Config syncConfig, Work work) {
+	private void getQosParmas(ArrayList<Integer> iopsQos, List<RateLimiter> iopsLimiter, Config qosConfig, Work work) {
 		// TODO Auto-generated method stub
-		RedisUtil redis = null;
-		iopsQos = getIopsQosValue(syncConfig);
-		String bandthQos = getBandthQosValue(syncConfig);
-		redis = new RedisUtil("10.180.210.55", 6379, "1q2w3e4r!");
+		
+		String bandthQos = null;
+		if (qosConfig == null || !qosConfig.get("qos").equals("enable")) {
+			return;
+		}
+		getIopsQosValue(qosConfig, iopsQos);
+		bandthQos = getBandthQosValue(qosConfig);
+		RedisUtil redis = getReisValue(qosConfig);
+		RateLimiter Limiter = null;
+		
 		RateLimiterFactory rateLimiterFactory = new RateLimiterFactory();
-		if (iopsQos != 0) {
-			iopsLimiter = rateLimiterFactory.build("ratelimiter:iops",
-					(double)iopsQos, 30, redis);
+		if (iopsQos.get(0) != 0) {
+			Limiter = rateLimiterFactory.build("ratelimiter:iops",
+					(double)iopsQos.get(0), 30, redis);
+			iopsLimiter.add(Limiter);
 		} 
+		return;
+		// TODO bnathQos支持后续调研开发		
 		//bandthQos在controller只进行设置并初始化，不需要返回
+		/*
 		if (bandthQos != null) {
 			double bandth = Double.valueOf(bandthQos.substring(0, bandthQos.length() - 3));
-			RateLimiter bandthLimiter = rateLimiterFactory.build("ratelimiter:bandth",
-					bandth, 30, redis);
+			rateLimiterFactory.build("ratelimiter:bandth", bandth, 30, redis);
 		}
+		*/
 	}
 
-	private int getIopsQosValue(Config syncConfig) {
+	private RedisUtil getReisValue(Config qosConfig) {
+		// TODO Auto-generated method stub
+		String redisHost = qosConfig.get("redisHost");
+		int redisPort = Integer.parseInt(qosConfig.get("redisPort"));
+		String redisPasswd = qosConfig.get("redisPasswd");
+		
+		RedisUtil redis = new RedisUtil(redisHost, redisPort, redisPasswd);
+		return redis;
+	}
+
+	private int getIopsQosValue(Config qosConfig, ArrayList<Integer> iopsQos) {
 		// TODO Auto-generated method stub
 		int iops = 0;
 		try {
-			String iopsStr = syncConfig.get("iopsQos");
+			String iopsStr = qosConfig.get("iopsQos");
 			if (iopsStr.charAt(iopsStr.length() -1) != 'n') {
 				return 0;
 			}
 			iops =Integer.parseInt(iopsStr.substring(0, iopsStr.length() - 1));
+			iopsQos.add(iops);
 		} catch (Exception e) {
             return 0;
 		}
 		return iops;
 	}
 
-	private String getBandthQosValue(Config syncConfig) {
+	private String getBandthQosValue(Config qosConfig) {
 		// TODO Auto-generated method stub
 		String bandth = null;
 		try {
-			String bandthStr = syncConfig.get("bandthQos");
+			String bandthStr = qosConfig.get("bandthQos");
 			int length = bandthStr.length();
 			if (bandthStr.charAt(length - 4) != 'n' && bandthStr.charAt(length - 3) != ':' && 
 					bandthStr.charAt(length - 1) != 'k' && bandthStr.charAt(length - 1) != 'K' &&
@@ -414,7 +435,7 @@ class WorkloadProcessor {
 		return s3Storage.listBuckets();
 	}
 
-	private void setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, Map<String, String> marker, Work work, StageContext stageContext, int syncNum, int iopsQos, RateLimiter iopsLimiter){		
+	private void setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, Map<String, String> marker, Work work, StageContext stageContext, int syncNum, ArrayList<Integer> iopsQos, List<RateLimiter> iopsLimiter){		
 		 List<List<String>> objsList = new ArrayList<List<String>>(); 
 		 int drivers = controllerContext.getDriverCount();
 		 S3Storage s3Storage = new S3Storage();
@@ -422,8 +443,35 @@ class WorkloadProcessor {
 		 //String nextMarker;
 		 while (true) {
 			 try {
-				 if (iopsLimiter.tryAcquire(iopsQos, 1, TimeUnit.SECONDS)) {
-					 for (int i=0; i< drivers; i++) {
+				 if (iopsLimiter.get(0) != null && iopsQos.get(0) != 0) {
+					 if (iopsLimiter.get(0).tryAcquire(iopsQos.get(0), 1, TimeUnit.SECONDS)) {
+						 for (int i=0; i< drivers; i++) {
+							 List<String> objs = new ArrayList<String>();
+							 s3Storage.listVersions(srcBucket, marker, objs, syncNum);
+							 objsList.add(objs);
+							 //解决循环list不能停止在问题
+							 for(String keyMarker : marker.keySet()) {
+								 String versionIdMarker = marker.get(keyMarker);
+								 if ((keyMarker == null || keyMarker.length() <= 0) && (versionIdMarker == null || versionIdMarker.length() <= 0)) {
+									 break;
+								 }
+								 marker.put(keyMarker, versionIdMarker);
+							 }
+							 if (marker == null || marker.size() < 1) {
+								 break;
+							 }
+						 } 
+						 if (objsList.size() < drivers) {
+							 for (int i = 0; i < drivers - objsList.size(); i++) {
+								 objsList.add(null);
+							 }
+						 }	
+						 break;
+					 } else {
+						 continue;
+					 }
+				 } else {
+					 for (int i=0; i < drivers; i++) {
 						 List<String> objs = new ArrayList<String>();
 						 s3Storage.listVersions(srcBucket, marker, objs, syncNum);
 						 objsList.add(objs);
@@ -445,8 +493,6 @@ class WorkloadProcessor {
 						 }
 					 }	
 					 break;
-				 } else {
-					 continue;
 				 }
 			 } catch (InterruptedException e) {
 				 // TODO Auto-generated catch block

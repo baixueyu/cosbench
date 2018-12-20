@@ -200,17 +200,11 @@ class MissionHandler {
         int workers = mission.getWorkers();
         int offset = mission.getOffset();
         if (getType() != null &&  getType().equals("sync")) {
-        	//for qos
-    		RedisUtil redis = null;
-    		RateLimiter bandthLimiter = null;
-    		String bandthQos = "13244:4k";
-    		redis = new RedisUtil("10.180.210.55", 6379, "1q2w3e4r!");
-    		RateLimiterFactory rateLimiterFactory = new RateLimiterFactory();
-    		if (bandthQos != null) {
-    			double bandth = Double.valueOf(bandthQos.substring(0, bandthQos.length() - 3));
-    			bandthLimiter = rateLimiterFactory.build("ratelimiter:iops",
-    					bandth, 30, redis, true);
-    		} 
+        	//bandthQos暂不支持
+        	/*Config qosConfig = KVConfigParser.parse(mission.getQos().getConfig());
+        	RateLimiter bandthLimiter = getBandthRateLimiter(qosConfig);
+        	String bandthQos = getBandthQosValue(qosConfig);
+    		*/
         	//TODO for sync operator set object_list to registry, divide equally
         	boolean isEmpty = false;
         	List<String> objs = mission.getObjs();
@@ -264,7 +258,11 @@ class MissionHandler {
                 }
                 taskMission.setObjs(syncObjs);
                 WorkerContext workContext = createWorkerContext(i + offset + 1, taskMission);
+               	//bandthQos暂不支持
+                /*
                 workContext.setRatelimiter(bandthLimiter);
+                workContext.setBandthQos(bandthQos);
+                */
                 registry.addWorker(workContext);
                 
             }
@@ -277,7 +275,52 @@ class MissionHandler {
         
     }
 
-    private WorkerContext createWorkerContext(int idx, Mission mission) {
+    private String getBandthQosValue(Config qosConfig) {
+		// TODO Auto-generated method stub
+		String bandth = null;
+		try {
+			String bandthStr = qosConfig.get("bandthQos");
+			int length = bandthStr.length();
+			if (bandthStr.charAt(length - 4) != 'n' && bandthStr.charAt(length - 3) != ':' && 
+					bandthStr.charAt(length - 1) != 'k' && bandthStr.charAt(length - 1) != 'K' &&
+					bandthStr.charAt(length - 1) != 'M' && bandthStr.charAt(length - 1) != 'm') {
+				return null;
+			}
+			bandth = bandthStr.substring(0, bandthStr.length() - 4) + bandthStr.substring(length - 3 , length);
+		} catch (Exception e) {
+            return null;
+		}
+		return bandth;
+	}
+
+	private RateLimiter getBandthRateLimiter(Config qosConfig) {
+		// TODO Auto-generated method stub
+    	if (qosConfig == null || !qosConfig.get("qos").equals("enable")) {
+    		return null;
+    	}
+    	RedisUtil redis = getRedisValue(qosConfig);
+		RateLimiter bandthLimiter = null;
+		RateLimiterFactory rateLimiterFactory = new RateLimiterFactory();
+		String bandthQos = qosConfig.get("bandthQos");
+		if (bandthQos != null) {
+			double bandth = Double.valueOf(bandthQos.substring(0, bandthQos.length() - 4));
+			bandthLimiter = rateLimiterFactory.build("ratelimiter:bandth",
+					bandth, 30, redis, true);
+		} 
+		return bandthLimiter;
+	}
+
+	private RedisUtil getRedisValue(Config qosConfig) {
+		// TODO Auto-generated method stub
+		String redisHost = qosConfig.get("redisHost");
+		int redisPort = Integer.parseInt(qosConfig.get("redisPort"));
+		String redisPasswd = qosConfig.get("redisPasswd");
+		
+		RedisUtil redis = new RedisUtil(redisHost, redisPort, redisPasswd);
+		return redis;
+	}
+
+	private WorkerContext createWorkerContext(int idx, Mission mission) {
     	
     	
     	LogManager manager = missionContext.getLogManager();

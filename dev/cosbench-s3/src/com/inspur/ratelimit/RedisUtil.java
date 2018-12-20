@@ -86,7 +86,11 @@ public final class RedisUtil {
 			//实例化
 		    this.redis = new StringRedisTemplate(connectionFactory);
 			//初始化StringRedisTemplate
-			this.redis.afterPropertiesSet();
+		    this.redis.afterPropertiesSet();
+		     Boolean hasKey = this.redis.hasKey("test");
+	    	if (hasKey) {
+	    		String value =  this.redis.opsForValue().get("test");
+	    	}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

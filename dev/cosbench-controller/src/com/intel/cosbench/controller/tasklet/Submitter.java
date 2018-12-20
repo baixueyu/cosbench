@@ -86,6 +86,7 @@ class Submitter extends AbstractCommandTasklet<SubmitResponse> {
         	mission.setBandthQos(work.getBandthQos());
         	mission.setLastSyncStartTime(work.getSync().getLastSyncStartTime());
         	mission.setConfigurationSync(work.getSync().getConfigurationSync());
+        	mission.setQos(work.getSync().getQos());
         } else {
         	mission.setStorage(work.getStorage());
         }

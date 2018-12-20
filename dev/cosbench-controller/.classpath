@@ -1,8 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="D:/cosbench/dev/cosbench-s3/ratelimit.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/aspectjrt.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/aspectjweaver.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/commons-logging-1.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/commons-pool2-2.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/guava-18.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/jackson-annotations-2.5.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/jackson-core-2.5.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/jackson-core-asl-1.8.7.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/jackson-databind-2.5.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/jackson-dataformat-cbor-2.5.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/jackson-mapper-asl-1.8.7.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/jedis-2.4.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/ratelimit.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/spring-beans-3.0.7.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/spring-context-3.0.7.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/spring-core-3.0.7.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/spring-dao-2.0.8.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/spring-data-redis-1.6.2.RELEASE.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/com.springsource.org.aopalliance-1.0.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Program Files (x86)/Git/cosbench/dev/cosbench-controller/org.springframework.aop-3.0.5.RELEASE.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

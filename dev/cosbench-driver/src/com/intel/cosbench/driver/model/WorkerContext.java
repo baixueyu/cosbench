@@ -61,6 +61,7 @@ public class WorkerContext implements WorkerInfo {
     private volatile int version = 0;
     private volatile int runlen = 0;
     private RateLimiter ratelimiter = null;
+	private String bandthQos;
 
 	public WorkerContext() {
         /* empty */
@@ -228,5 +229,14 @@ public class WorkerContext implements WorkerInfo {
 //        snapshot = new Snapshot();
 //        logger = null;
     }
+
+	public void setBandthQos(String bandthQos) {
+		// TODO Auto-generated method stub
+		this.bandthQos = bandthQos;	
+	}
+
+	public String getBandthQos() {
+		return bandthQos;
+	}
 
 }

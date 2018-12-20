@@ -35,4 +35,3 @@ Import-Package: com.intel.cosbench.api.auth,
  com.intel.cosbench.log
 Export-Package: com.intel.cosbench.api.S3Stor
 
-
