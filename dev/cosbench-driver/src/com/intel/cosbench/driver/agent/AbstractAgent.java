@@ -50,6 +50,7 @@ abstract class AbstractAgent implements Agent {
         } catch (AbortedException be) {
             workerContext.setAborted(true);
             LOGGER.debug("agent {} has been aborted", idx);
+            throw be;
         } catch (AgentException ae) {
             workerContext.setError(true);
             LOGGER.debug("agent {} terminated with error", idx);

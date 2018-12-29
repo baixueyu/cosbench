@@ -17,6 +17,7 @@ limitations under the License.
 
 package com.intel.cosbench.config;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +85,7 @@ public class Mission implements Iterable<Operation> {
         this.destBucketName = m.destBucketName;
         this.objs = m.objs;
         this.type = m.type;
+        this.state = m.state;
        
     }
 
@@ -345,11 +347,6 @@ public class Mission implements Iterable<Operation> {
         if (sum != 100)
             throw new ConfigException("op ratio should sum to 100");
     }
-
-
-
-
-
 
 
 }

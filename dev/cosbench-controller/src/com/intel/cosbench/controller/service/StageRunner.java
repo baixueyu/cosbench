@@ -83,6 +83,7 @@ class StageRunner implements StageCallable {
         WorkScheduler scheduler = null;
         Stage stage = stageContext.getStage();
         DriverRegistry registry = controllerContext.getDriverRegistry();
+        
         scheduler = Schedulers.defaultScheduler(stage, registry);
         stageContext.setScheduleRegistry(scheduler.schedule());
     }
@@ -196,7 +197,7 @@ class StageRunner implements StageCallable {
         LOGGER.info("successfully booted all tasks in stage {}", id);
     }
 
-    private void submitTasks() {
+	private void submitTasks() {
         String id = stageContext.getId();
         stageContext.setState(SUBMITTING);
         TaskRegistry tasks = stageContext.getTaskRegistry();
@@ -205,14 +206,15 @@ class StageRunner implements StageCallable {
             int i = 0;
             int size = objList.size();
             for (TaskContext task : tasks) {
-    		//	task.getSchedule().getWork().getSync().setObjs(objList.get(i));
-    			task.setObjs(objList.get(i));
-            	i++;
+            //	task.getSchedule().getWork().getSync().setObjs(objList.get(i));
+            	task.setObjs(objList.get(i));
+    			i++;
     			//the problem of null point
     			if (i == size) {
     				break;
     			}
     		}
+          
         }
         
         List<Tasklet> tasklets = Tasklets.newSubmitters(tasks);
@@ -309,6 +311,7 @@ class StageRunner implements StageCallable {
     }
 
     private void executeTasklets(List<Tasklet> tasklets) {
+    	
         int num = tasklets.size();
         LOGGER.debug("begin to execute tasklets, {} in total", num);
         try {
@@ -321,28 +324,28 @@ class StageRunner implements StageCallable {
         List<String> killDrivers = new ArrayList<String>();
         for (TaskContext task : stageContext.getTaskRegistry()){
         	if (task.getState().equals(TaskState.ERROR)
-                    || task.getState().equals(TaskState.INTERRUPTED)){
+                    || task.getState().equals(TaskState.INTERRUPTED)
+                    || task.getState().equals(TaskState.FAILED)){
         		 errIds.add(task.getId());
         	}
             if (task.getKillDriver()!= null && task.getKillDriver().length()>0) {
             	 killDrivers.add(task.getKillDriver());
              try{
             	 String srcBucketName = task.getSchedule().getWork().getSync().getSrcBucketName();
-            	 File file = new File("log/" + srcBucketName + ".txt");
+            	 File file = new File("log/failbuckets.txt");
              	 if (!file.exists()) {
               		file.createNewFile();
                  }  
              	FileWriter writer = new FileWriter(file, true);
     			BufferedWriter bWriter = new BufferedWriter(writer);
-    			for (String obj : task.getObjs()) {
-    				bWriter.write(obj);
-    				bWriter.newLine();
-    				bWriter.flush();
-    			}
+    			bWriter.write(srcBucketName);
+    			bWriter.newLine();
+    			bWriter.flush();
     			writer.close();
             } catch (IOException e){
             	 e.printStackTrace();
              }
+           
           }
         }
         stageContext.setKillDriver(killDrivers);   
@@ -351,5 +354,4 @@ class StageRunner implements StageCallable {
         LOGGER.error("detected tasks {} have encountered errors", errIds);
         throw new StageException(); // mark termination
     }
-
 }

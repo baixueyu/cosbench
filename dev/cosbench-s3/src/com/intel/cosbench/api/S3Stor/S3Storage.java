@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpStatus;
-
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -56,6 +55,7 @@ import com.intel.cosbench.api.storage.StorageAPI;
 import com.intel.cosbench.api.storage.StorageException;
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.Logger;
+import com.intel.cosbench.service.AbortedException;
 
 public class S3Storage extends NoneStorage {
 	private int timeout;
@@ -100,7 +100,7 @@ public class S3Storage extends NoneStorage {
 		clientConf.withUseExpectContinue(false);
 		clientConf.withSignerOverride("S3SignerType");
 		clientConf.setMaxConnections(500);
-		clientConf.setMaxErrorRetry(10);
+		clientConf.setMaxErrorRetry(5);
 		// clientConf.setProtocol(Protocol.HTTP);
 		if ((!proxyHost.equals("")) && (!proxyPort.equals(""))) {
 			clientConf.setProxyHost(proxyHost);
@@ -159,13 +159,17 @@ public class S3Storage extends NoneStorage {
 		super.getObject(container, object, config);
 		InputStream stream;
 		try {
-
 			S3Object s3Obj = client.getObject(new GetObjectRequest(container,
 					object, versionId));
 			size.add(s3Obj.getObjectMetadata().getContentLength());
 			stream = s3Obj.getObjectContent();
-
 		} catch (Exception e) {
+			if(e.getCause()!=null){
+				if (e.getCause().toString().contains("ConnectException") || e.getCause().toString().contains("ConnectTimeoutException")) {
+					throw new AbortedException();	
+				}
+				
+			}
 			throw new StorageException(e);
 		}
 		return stream;
@@ -357,7 +361,7 @@ public class S3Storage extends NoneStorage {
 		// super.createObject(container, object, data, length, config);
 		super.syncObject(container, srcContainer, object, data, content_length, upload_id, partETags, versionId, srcS3Storage, config);
 		long part_size = 15 * 1024 * 1024;
-		int success = 0;;
+		int success = 0;
 		try {
 			if (content_length < part_size) {
 				S3Storage s3 = (S3Storage) srcS3Storage;

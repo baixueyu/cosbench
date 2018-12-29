@@ -51,10 +51,10 @@ class Querier extends AbstractCommandTasklet<QueryResponse> {
             	LOGGER.warn("some unexpected exception occurs when ping drivers, but it's ignorable.", tle);
                 i++;
             }
-            if (i == 5){
+            if (i == 5) {
             	break;
             }
-        } while (!context.getState().equals(FINISHED));
+        } while (!context.getState().equals(FINISHED) && !context.getState().equals(FAILED));
     }
 
     private void sleep() {
@@ -68,15 +68,27 @@ class Querier extends AbstractCommandTasklet<QueryResponse> {
 
     @Override
     protected void handleResponse(QueryResponse response) {
+    	
     	if (response == null) {
     		LOGGER.warn("no response gets from driver");
     		return;
     	}
-    	if (response.getState().equals("abort")) {
-    		context.setState(FAILED);
-    	}
+    	 if (response.getState().equals("abort")) {
+     		context.setState(FAILED);
+     		System.out.println(context.getState()+"+1");
+     	}
+    	 
         if (!response.isRunning())
-            context.setState(FINISHED); // stop querying
+        {
+        //	context.setState(FINISHED); // stop querying
+        	if(context.getState().equals(FAILED)){ 
+        		context.setState(FAILED);
+        	} else {
+        		context.setState(FINISHED);
+        	}
+        	
+        	System.out.println(context.getState()+"+2");
+        }
         Date time = response.getTime();
         Report report = new Report();
         for (Metrics metrics : response.getReport())

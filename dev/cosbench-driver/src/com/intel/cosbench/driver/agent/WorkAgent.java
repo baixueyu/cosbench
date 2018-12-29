@@ -136,6 +136,8 @@ class WorkAgent extends AbstractAgent implements Session, OperationListener {
         dog.watch(timeout);
         try {
             doWork(); // launch work
+        } catch (AbortedException e){
+        	throw e;
         } finally {
             dog.dismiss();
         }
@@ -185,6 +187,7 @@ class WorkAgent extends AbstractAgent implements Session, OperationListener {
             	if (workerContext.getMission().getType().equals("sync")) {
             		workerContext.setAborted(true);
             		workerContext.getMission().setState("abort");
+            		throw ae;
             	} else {
                     workerContext.setFinished(true);
             	}

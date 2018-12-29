@@ -1,20 +1,19 @@
 package com.intel.cosbench.driver.operator;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-
 import org.apache.commons.io.IOUtils;
 
-import com.intel.cosbench.api.storage.StorageException;
 import com.intel.cosbench.api.storage.StorageInterruptedException;
 import com.intel.cosbench.bench.Result;
 import com.intel.cosbench.bench.Sample;
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.config.Mission;
-import com.intel.cosbench.driver.generator.RandomInputStream;
 import com.intel.cosbench.driver.generator.XferCountingInputStream;
-import com.intel.cosbench.driver.util.ObjectPicker;
-import com.intel.cosbench.driver.util.SizePicker;
 import com.intel.cosbench.service.AbortedException;
 
 public class Syncer extends AbstractOperator {
@@ -139,7 +138,10 @@ public class Syncer extends AbstractOperator {
         } catch (StorageInterruptedException sie) {
             doLogErr(session.getLogger(), sie.getMessage(), sie);
             throw new AbortedException();
-        } catch (Exception e) {
+        } catch(AbortedException ae){
+        	doLogErr(session.getLogger(), ae.getMessage(), ae);
+        	throw new AbortedException();
+	    }catch (Exception e) {
         	syncException(e, session);
         	errorStatisticsHandle(e, session, destBucketName + "/" + objectName);
 			return new Sample(new Date(), op.getId(), op.getOpType(),
@@ -173,8 +175,24 @@ public class Syncer extends AbstractOperator {
         		succ = false;
         		Mission.setSyncObjFailCount(1); 			
         		doLogWarn(session.getLogger(), "/" + srcBucketName + "/" + objectName + " 同步失败");
+        		try{
+               	 	File file = new File("log/" + srcBucketName + ".txt");
+                	if (!file.exists()) {
+                 		file.createNewFile();
+                    }  
+                	FileWriter writer = new FileWriter(file, true);
+                	BufferedWriter bWriter = new BufferedWriter(writer);
+                	bWriter.write("/" + srcBucketName + "/" + objectName);
+                	bWriter.newLine();
+                	bWriter.flush();
+                	bWriter.close();
+                	writer.close();
+               } catch (IOException e){
+               	 e.printStackTrace();
+                }
+        		
         	}
-        	if (Mission.getSyncObjFailCount() >= 100) {
+        	if (Mission.getSyncObjFailCount() >= 20) {
         		doLogErr(session.getLogger(), "数据同步失败到达极限，退出本次任务");
         		throw new AbortedException();
         	}
