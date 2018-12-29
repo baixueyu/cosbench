@@ -32,9 +32,10 @@ public class TaskContext implements TaskInfo {
     private volatile TaskState state;
     private SchedulePlan schedule;
     private List<String> objs;
+    private String killDriver;
+
     private transient HttpClient httpClient;
     private transient ObjectMapper mapper;
-    private String killDriver;
 
     private String missionId;
     /* The interval that is chosen by the driver */
@@ -53,8 +54,19 @@ public class TaskContext implements TaskInfo {
     public TaskContext() {
         /* empty */
     }
+    
+    
+    public List<String> getObjs() {
+		return objs;
+	}
 
-    public String getId() {
+
+	public void setObjs(List<String> objs) {
+		this.objs = objs;
+	}
+
+
+	public String getId() {
         return id;
     }
 
@@ -155,17 +167,11 @@ public class TaskContext implements TaskInfo {
     	}
     }
 
-	public List<String> getObjs() {
-		return objs;
-	}
-
-	public void setObjs(List<String> objs) {
-		this.objs = objs;
-	}
 
 	public String getKillDriver() {
 		return killDriver;
 	}
+
 
 	public void setKillDriver(String killDriver) {
 		this.killDriver = killDriver;

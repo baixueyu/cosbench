@@ -17,6 +17,7 @@ limitations under the License.
 
 package com.intel.cosbench.controller.tasklet;
 
+import static com.intel.cosbench.model.StageState.FAILED;
 import static com.intel.cosbench.model.TaskState.*;
 
 import com.intel.cosbench.controller.model.TaskContext;
@@ -50,8 +51,12 @@ abstract class AbstractTasklet implements Tasklet {
             context.setState(INTERRUPTED); // waiting for cancellation
             LOGGER.debug("tasklet {} has been interrupted", id);
         } catch (TaskletException te) {
-        //    context.setState(ERROR); // waiting for termination
-        	context.setKillDriver(context.getSchedule().getDriver().getName());
+        	System.out.println(context.getState()+"in AbstractTasklet");
+        	if(!context.getState().equals(FAILED)){
+        		context.setKillDriver(context.getSchedule().getDriver().getName());
+        	}
+         //   context.setState(ERROR); // waiting for termination
+        	
         	LOGGER.error("tasklet {} is going to be terminated", id);
             LOGGER.debug("tasklet {} is going to be terminated", id);
         } catch (Exception e) {

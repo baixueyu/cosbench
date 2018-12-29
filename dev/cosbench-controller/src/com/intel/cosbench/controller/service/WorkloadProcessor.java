@@ -157,7 +157,7 @@ class WorkloadProcessor {
         String id = workloadContext.getId();
         LOGGER.info("begin to process workload {}", id);
         try {
-            processWorkload();
+        	processWorkload();
         } catch (CancelledException ce) {
             cancelWorkload();
             return;
@@ -218,7 +218,7 @@ class WorkloadProcessor {
                    		Map<String, String> nextMarker = new HashMap<String, String>(1);
                    	 	while (true) {                    	
                        	 	Config config = getSrcStorageConfig(storageConfig);
-                       	 	setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext, 100);         
+                       	 	setSyncInfo(config, srcBucket, destBucket, nextMarker, work, stageContext, syncNum);         
                 			runStage(stageContext);
                        		String key = null;
             				String versionIdMarker = null;
@@ -257,7 +257,7 @@ class WorkloadProcessor {
             } else {
             	 iter.remove();
                  runStage(stageContext);
-            }          
+            } 
         }
         executeTrigger(trigger, false, workloadContext.getId());
         workloadContext.setStopDate(new Date());
@@ -296,6 +296,7 @@ class WorkloadProcessor {
 	private void setSyncInfo(Config srcStorageConfig, String srcBucket, String destBucket, Map<String, String> marker, Work work, StageContext stageContext, int syncNum){
 		 List<List<String>> objsList = new ArrayList<List<String>>(); 
 		 int drivers = controllerContext.getDriverCount();
+		 DriverContext[] lala = controllerContext.getDriverRegistry().getAllDrivers();
 		 S3Storage s3Storage = new S3Storage();
 		 s3Storage.init(srcStorageConfig, LOGGER);
 		 //String nextMarker;
@@ -303,6 +304,7 @@ class WorkloadProcessor {
 			 List<String> objs = new ArrayList<String>();
 			 s3Storage.listVersions(srcBucket, marker, objs, syncNum);
 			 objsList.add(objs);
+		    
 			 //解决循环list不能停止在问题
 			 for(String keyMarker : marker.keySet()) {
 				 String versionIdMarker = marker.get(keyMarker);
@@ -311,12 +313,13 @@ class WorkloadProcessor {
 				 }
 				 marker.put(keyMarker, versionIdMarker);
 			 }
-			if (marker == null || marker.size() < 1) {
-				break;
-			}
+			 if (marker == null || marker.size()<1) {
+				 break;
+			 }
+			
 		 }
-		 if (objsList.size() < drivers) {
-			 for (int i = 0; i < drivers-objsList.size(); i++) {
+		 if (objsList.size()<drivers) {
+			 for(int i=0; i<drivers-objsList.size(); i++){
 				 objsList.add(null);
 			 }
 		 }
@@ -387,6 +390,7 @@ class WorkloadProcessor {
 		//	DriverContext[] test = registryNew.getAllDrivers();
 		    controllerContext.setDriverRegistry(registryNew);
 		} 
+	
 	}
     
 	private void executeDelay(StageContext stageContext, int closuredelay)

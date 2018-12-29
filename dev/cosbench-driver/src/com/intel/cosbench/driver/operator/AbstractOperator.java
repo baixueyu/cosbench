@@ -24,6 +24,7 @@ import com.intel.cosbench.bench.ErrorStatistics;
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.LogFactory;
 import com.intel.cosbench.log.Logger;
+import com.intel.cosbench.service.AbortedException;
 
 /**
  * The base class encapsulates different operations.
@@ -73,7 +74,7 @@ abstract class AbstractOperator implements Operator {
     public void operate(Session session) {
         int idx = session.getIndex();
         int all = session.getTotalWorkers();
-        operate(idx, all, session);
+        	operate(idx, all, session);
     }
     
     protected static void doLogInfo(Logger logger, String message) {

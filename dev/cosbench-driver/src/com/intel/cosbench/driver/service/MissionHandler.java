@@ -256,6 +256,8 @@ class MissionHandler {
                 	break;
                 }
                 taskMission.setObjs(syncObjs);
+              
+                
                 //set srcBucketName & destBucketName
                 //mission.setSrcBucketName(msrcBucketName);
                 //mission.setDestBucketName(destBucketName);
@@ -426,6 +428,7 @@ class MissionHandler {
         } catch (MissionException me) {
             missionContext.setState(TERMINATED);
             LOGGER.info("mission {} has been terminated", id);
+            System.out.println(missionContext.getState()+"missionHandler");
             return;
         } catch (Exception e) {
             missionContext.setState(TERMINATED);
@@ -458,18 +461,32 @@ class MissionHandler {
         int num = agents.size();
         LOGGER.debug("begin to execute agents, {} in total", num);
         try {
-            if (timeout == 0)
-                executor.invokeAll(agents); // wait until finish
+            if (timeout == 0){
+            	List<Future<Agent>> futures = executor.invokeAll(agents); // wait until finish
+                for(Future<Agent> future : futures){
+                	if(future.get() != null){
+                	    future.get();
+                	}
+                	
+                }
+            }
             else {
                 List<Future<Agent>> futures = executor.invokeAll(agents,
                         timeout, TimeUnit.SECONDS);
-                for (Future<Agent> future : futures)
-                    if (future.isCancelled()) // test timeout status
+                for (Future<Agent> future : futures){
+                	 if (future.isCancelled()){ // test timeout status
                         throw new TimeoutException(); // force mission abort
+                	 }
+                }   
             }
         } catch (InterruptedException ie) {
             throw new AbortedException(); // mission aborted
-        }
+        } catch (ExecutionException e) {
+			e.printStackTrace();
+			if(e.getCause().toString().contains("AbortedException")){
+				missionContext.getMission().setState("abort");
+			}
+		} 
         LOGGER.debug("all {} agents have finished execution", num);
         List<Integer> errIds = new ArrayList<Integer>();
         for (WorkerContext worker : missionContext.getWorkerRegistry())

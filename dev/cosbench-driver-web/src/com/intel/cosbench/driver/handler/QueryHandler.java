@@ -39,6 +39,8 @@ public class QueryHandler extends MissionHandler {
         Snapshot snapshot = info.getSnapshot();
         if (info.getMission().getType().equals("sync")) {
         	response.setState(info.getMission().getState());
+        	System.out.println(info.getMission().getState()+" lalalla");
+        	System.out.println(info.getState()+" in queryhandler");
         }
         response.setTime(snapshot.getTimestamp());
         response.setVersion(snapshot.getVersion());
