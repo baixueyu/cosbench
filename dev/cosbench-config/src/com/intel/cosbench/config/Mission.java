@@ -375,4 +375,9 @@ public class Mission implements Iterable<Operation> {
 	public void setQos(Qos qos) {
 		this.qos = qos;
 	}
+
+	public void setBandthQos(boolean bandthQos) {
+		this.bandthQos = bandthQos;
+	}
+
 }

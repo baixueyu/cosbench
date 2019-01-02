@@ -91,6 +91,9 @@ public class Syncer extends AbstractOperator {
     	Map<String, String> syncObjs = session.getWorkContext().getMission().getObjs();
     	String srcBucketName = session.getWorkContext().getMission().getSrcBucketName();
     	String destBucketName = session.getWorkContext().getMission().getDestBucketName();
+    	//bandthQos�ݲ�֧��
+    	//RateLimiter rateLimiter = session.getWorkContext().getRatelimiter();
+    	//int bandthQos = session.getWorkContext().getBandthQos();
     	//TODO destBucketName exist?  begin
     	try {
     		session.getWorkContext().getDestStorageApi().createContainer(destBucketName, srcBucketName, session.getApi(), config);
@@ -115,7 +118,7 @@ public class Syncer extends AbstractOperator {
     		String objectName = key.substring(0,index);
     		String versionId = key.substring(index+1, key.length());
     			//Sample sample = doSyncData(srcBucketName, destBucketName, objectName, versionId, config, session, this, rateLimiter, bandthQos);
-    			Sample sample = doSyncData(srcBucketName, destBucketName, objectName, versionId, config, session, this, null, null);
+    			Sample sample = doSyncData(srcBucketName, destBucketName, objectName, versionId, config, session, this, null, 0);
     		    //TODO do sync metadata begin
     		    doSyncMetaData(srcBucketName, destBucketName, objectName, config, session, this);
     		    //TODO do sync metadata end
@@ -136,9 +139,7 @@ public class Syncer extends AbstractOperator {
     	
     	//TODO sync user metadata begin 
     	//TODO sync user metadata end
-	}
-
-	public static  Sample doSyncData(String srcBucketName, String destBucketName, String objectName, String versionId, Config config, Session session, Operator op, RateLimiter rateLimiter, String bandthQos) {
+	public static  Sample doSyncData(String srcBucketName, String destBucketName, String objectName, String versionId, Config config, Session session, Operator op, RateLimiter rateLimiter, int bandthQos) {
 		if (Thread.interrupted())
 			throw new AbortedException();
         //TODO Get object begin 
@@ -174,8 +175,8 @@ public class Syncer extends AbstractOperator {
         		doLogInfo(session.getLogger(), objectName + "ÒÑ´æÔÚÓÚÄ¿µÄÍ°£¬±¾´ÎÍ¬²½Ìø¹ý");
         	} else {
         		do {
-        			int result = session.getWorkContext().getDestStorageApi().syncObject(destBucketName,srcBucketName, objectName, cin, objSize.get(0), upload_id, partETags, versionId, session.getApi(), config, rateLimiter);
-        			System.out.println(objectName + "ÒÑÉÏ´«" + (i + 1) + "´Î");
+        			int result = session.getWorkContext().getDestStorageApi().syncObject(destBucketName,srcBucketName, objectName, cin, objSize.get(0), upload_id, partETags, versionId, session.getApi(), config, rateLimiter, null);
+        			System.out.println(objectName + "���ϴ�" + (i + 1) + "��");
         			if (result == 0) {
         				System.out.println(objectName + "µÚ" + (i + 1) + "´ÎÉÏ´«ºó³É¹¦");
         				doLogInfo(session.getLogger(), objectName + "µÚ" + (i + 1) + "´ÎÉÏ´«ºó³É¹¦");
