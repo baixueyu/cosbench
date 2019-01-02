@@ -15,12 +15,12 @@ import static com.intel.cosbench.client.S3Stor.S3Constants.PROXY_PORT_KEY;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpStatus;
+import org.apache.http.conn.ConnectTimeoutException;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
@@ -67,6 +67,7 @@ import com.intel.cosbench.api.storage.StorageAPI;
 import com.intel.cosbench.api.storage.StorageException;
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.Logger;
+import com.intel.cosbench.service.AbortedException;
 
 public class S3Storage extends NoneStorage {
 	private int timeout;
@@ -111,7 +112,7 @@ public class S3Storage extends NoneStorage {
 		clientConf.withUseExpectContinue(false);
 		clientConf.withSignerOverride("S3SignerType");
 		clientConf.setMaxConnections(500);
-		clientConf.setMaxErrorRetry(10);
+		clientConf.setMaxErrorRetry(5);
 		// clientConf.setProtocol(Protocol.HTTP);
 		if ((!proxyHost.equals("")) && (!proxyPort.equals(""))) {
 			clientConf.setProxyHost(proxyHost);
@@ -170,13 +171,17 @@ public class S3Storage extends NoneStorage {
 		super.getObject(container, object, config);
 		InputStream stream;
 		try {
-
 			S3Object s3Obj = client.getObject(new GetObjectRequest(container,
 					object, versionId));
 			size.add(s3Obj.getObjectMetadata().getContentLength());
 			stream = s3Obj.getObjectContent();
-
 		} catch (Exception e) {
+			if(e.getCause()!=null){
+				if (e.getCause().toString().contains("ConnectException") || e.getCause().toString().contains("ConnectTimeoutException")) {
+					throw new AbortedException();	
+				}
+				
+			}
 			throw new StorageException(e);
 		}
 		return stream;
@@ -227,16 +232,16 @@ public class S3Storage extends NoneStorage {
 			    client.setBucketVersioningConfiguration(new SetBucketVersioningConfigurationRequest(
 						container, srcVersionConfig));
 			}
+			
 		   
-		 //桶策略同步	
+		   //桶策略同步	
 		   if (configurationSync.charAt(0)== '1') {
 			   BucketPolicy srcBucketPolicy = srcClient.getBucketPolicy(new GetBucketPolicyRequest(srcContainer));
 			   if (srcBucketPolicy.getPolicyText() != null && srcBucketPolicy.getPolicyText().length() != 0) {
 				   client.setBucketPolicy(new SetBucketPolicyRequest(container, srcBucketPolicy.getPolicyText()));
 			   }
 		   }
-		 
-		 
+
 		 //生命周期
 		   if (configurationSync.charAt(1)== '1') {
 			   BucketLifecycleConfiguration srcBucketLifecycleConfiguration = srcClient.getBucketLifecycleConfiguration(new GetBucketLifecycleConfigurationRequest(srcContainer));
@@ -244,8 +249,6 @@ public class S3Storage extends NoneStorage {
 				   client.setBucketLifecycleConfiguration(container, srcBucketLifecycleConfiguration);
 			   }
 		   }
-		  
-		  
 		 //跨域资源共享CORS
 		   if (configurationSync.charAt(2)== '1') {
 			   BucketCrossOriginConfiguration srcBucketCrossOriginConfiguration = srcClient.getBucketCrossOriginConfiguration(new GetBucketCrossOriginConfigurationRequest(srcContainer));
@@ -253,16 +256,13 @@ public class S3Storage extends NoneStorage {
 				   client.setBucketCrossOriginConfiguration(container, srcBucketCrossOriginConfiguration);
 			   }
 		   }
-		  
-		  
 		  //静态网站托管Website
 		   if (configurationSync.charAt(3)== '1') {
-			   BucketWebsiteConfiguration srcBucketWebsiteConfiguration = srcClient.getBucketWebsiteConfiguration(new GetBucketWebsiteConfigurationRequest(srcContainer));
+	       BucketWebsiteConfiguration srcBucketWebsiteConfiguration = srcClient.getBucketWebsiteConfiguration(new GetBucketWebsiteConfigurationRequest(srcContainer));
 			   if (srcBucketWebsiteConfiguration != null) {
 				   client.setBucketWebsiteConfiguration(container, srcBucketWebsiteConfiguration);
 			   }
 		   }
-			
 		} catch (Exception e) {
 			throw new StorageException(e);
 		}
@@ -397,58 +397,21 @@ public class S3Storage extends NoneStorage {
 		}
 	}
 
-	/**
-	 * 同步前判断
-	 * 获取上次同步的起始时间及源桶中对象的上次修改时间
-	 * 若该对象的上次修改时间<上次同步的起始时间，则说明该对象在上次同步期间未被修改，不再同步
-	 * 对于上次同步期间未被修改又未同步成功的对象，存储到本地，最后单独处理
-	 * 若对象的上次修改时间>=上次同步的起始时间，则说明上次同步期间肯定被修改了，则无需做其他判断，直接同步即可
-	 * @return true 需要同步，  false 不需要同步
-	 */
-	@Override
-	public boolean needSyncOrNot(String container, String srcContainer, String object, long lastSyncStartTime, StorageAPI srcS3Storage, String versionId){		
-		S3Storage s3 = (S3Storage) srcS3Storage;
-		AmazonS3 srcClient = s3.getClient();
-		ObjectMetadata metadata = srcClient.getObjectMetadata(new GetObjectMetadataRequest(srcContainer, object, versionId));
-		Date lastModiDate = metadata.getLastModified();
-		long lastModiMills = lastModiDate.getTime(); 
-		System.out.println("get last modi time Date:" + object + " " + lastModiDate);
-		System.out.println("get last modi time millsec:" + object + " " + lastModiMills);
-		 
-		
-		//如果上次同步起始时间为0，说明是第一次同步，则对所有对象执行同步
-		if (lastSyncStartTime == 0) {
-			return true;
-		 }
-		else {
-		    if (lastModiMills < lastSyncStartTime) {
-		    	return false;
-		    }
-		    else {
-		    	return true;
-		    } 
-		}
-	}
-	
-	
 	@Override
 	public int syncObject(String container, String srcContainer, String object, InputStream data, long content_length, List<String> upload_id,
 			List<Object> partETags, String versionId, StorageAPI srcS3Storage, Config config, RateLimiter ratelimiter, String bandthQos) {
-		super.syncObject(container, srcContainer, object, data, content_length, upload_id, partETags, versionId, srcS3Storage, config, ratelimiter, bandthQos);
+		// super.createObject(container, object, data, length, config);
+		 super.syncObject(container, srcContainer, object, data, content_length, upload_id, partETags, versionId, srcS3Storage, config, ratelimiter, bandthQos);
 		long part_size = 15 * 1024 * 1024;
-		int success = 0;;
+		int success = 0;
 		try {
 			if (content_length < part_size) {
 				S3Storage s3 = (S3Storage) srcS3Storage;
 				AmazonS3 srcClient = s3.getClient();
+				// srcClient.getObjectAcl(srcContainer, object);
 				ObjectMetadata metadata = srcClient.getObjectMetadata(new GetObjectMetadataRequest(srcContainer, object, versionId));
 				PutObjectRequest request = new PutObjectRequest(container, object, data, metadata);
 				request.getRequestClientOptions().setReadLimit(15728640); // 15MB
-				// bandthQos 暂不支持
-				/*
-				request.setRateLimiter(ratelimiter);
-				request.getRequestClientOptions().setQos(bandthQos);
-				*/
 				client.putObject(request);
 				// TODO ACL need to consider
 				// AccessControlList acl = srcClient.getObjectAcl(srcContainer,
@@ -477,12 +440,10 @@ public class S3Storage extends NoneStorage {
 	 * @param srcS3Storage
 	 * @param srcContainer 源桶名
 	 * @param versionId
-	 * @param bandthQos 
-	 * @param ratelimiter 
 	 * @return
 	 */
 	public int syncMultipartObject(String bucket_name, InputStream in, String key_name, long content_length, List<String> upload_id,
-			List<Object> partETags, long part_size, StorageAPI srcS3Storage, String srcContainer, String versionId, RateLimiter rateLimiter, String bandthQos) {
+			 List<Object> partETags, long part_size, StorageAPI srcS3Storage, String srcContainer, String versionId, RateLimiter rateLimiter, String bandthQos) {
 		List<PartSummary> remote_parts = new ArrayList<PartSummary>();
 		try {
 			if (null == upload_id || upload_id.size() <= 0) {
@@ -548,11 +509,11 @@ public class S3Storage extends NoneStorage {
 	 * @param partETags
 	 * @param part_size
 	 * @param bandthQos 
-	 * @param rateLimiter 
+     * @param rateLimiter
 	 * @return
 	 */
 	public int upload_all_part(String bucket_name, InputStream in, String key_name, long content_length, List<String> upload_id,
-			List<PartSummary> remote_parts, List<Object> partETags, long part_size, RateLimiter rateLimiter, String bandthQos) {
+			 List<PartSummary> remote_parts, List<Object> partETags, long part_size, RateLimiter rateLimiter, String bandthQos) {
 		int seq = 0;
 		long file_position = 0;
 		for ( ; file_position < content_length; ) {
@@ -574,8 +535,8 @@ public class S3Storage extends NoneStorage {
 	 * @param remote_parts
 	 * @param upload_id
 	 * @param partETags
-	 * @param bandthQos 
-	 * @param rateLimiter 
+	 * @param bandthQos
+     * @param rateLimiter 
 	 * @return
 	 */
 	public int upload_part(String bucket_name, InputStream in, String key_name, long part_size, int seq, List<PartSummary> remote_parts,
@@ -607,11 +568,6 @@ public class S3Storage extends NoneStorage {
 				.withInputStream(in)
 				.withPartSize(part_size);
 		upload_request.getRequestClientOptions().setReadLimit(15728640); // 15MB
-		// bandthQos暂不支持
-		/*
-		upload_request.withRateLimiter(rateLimiter);
-		upload_request.getRequestClientOptions().setQos(bandthQos);
-		*/
 		UploadPartResult upload_response = client.uploadPart(upload_request);
 		partETags.add(upload_response.getPartETag());
 		System.out.println(key_name + "第" + (seq + 1) + "片上传成功");
