@@ -22,6 +22,7 @@ import static com.intel.cosbench.api.storage.StorageConstants.*;
 import java.io.*;
 import java.util.*;
 
+import org.apache.http.conn.ConnectTimeoutException;
 
 import com.intel.cosbench.api.auth.NoneAuth;
 import com.intel.cosbench.api.context.*;
