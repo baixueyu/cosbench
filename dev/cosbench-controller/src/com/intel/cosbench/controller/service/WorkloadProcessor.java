@@ -390,6 +390,11 @@ class WorkloadProcessor {
 		//	DriverContext[] test = registryNew.getAllDrivers();
 		    controllerContext.setDriverRegistry(registryNew);
 		} 
+		int driver = controllerContext.getDriverCount();
+		if(driver <= 0){
+			LOGGER.error("detected workload {} has no free driver", workloadContext.getId());
+			throw new WorkloadException();
+		}
 	
 	}
     
